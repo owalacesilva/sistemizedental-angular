@@ -16,7 +16,7 @@
                 <legend>Entre agora</legend>
                 <div class="form-group" ng-class="{ 'has-error': form.email.$invalid && (form.email.$dirty || form.$submitted) }">
                   <label for="email" class="control-label">E-mail</label>
-                  <input ng-model="vm.email" type="email" name="email" class="form-control" autocomplete="true" autofocus="autofocus" required />
+                  <input ng-model="vm.email" type="email" name="email" class="form-control" autocomplete="true" required />
                   <div ng-messages="form.email.$error" role="alert" class="help-block" ng-if="(form.email.$dirty || form.$submitted)">
                     <small ng-message="required">Campo obrigatório</small>
                   </div>

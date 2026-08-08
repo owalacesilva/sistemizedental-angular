@@ -1,0 +1,4 @@
+# Full gate before anything leaves the machine: lint the whole project, then
+# run the unit suite once (no watch). Skip with `git push --no-verify`.
+npm run lint
+npm run test:ci

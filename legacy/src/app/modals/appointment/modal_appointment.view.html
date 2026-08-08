@@ -12,7 +12,7 @@
         			<div class="form-group" ng-class="{ 'has-error': form.date_at.$invalid && form.$submitted }">
                 <label class="col-sm-4 control-label">Data da consulta: </label>
                 <div class="col-sm-8">
-                	<input type="date" class="form-control" name="date_at" ng-model="vm.appointment.date_at" ng-change="vm.changeDate()" autofocus="on" date-to-string required/>
+                	<input type="date" class="form-control" name="date_at" ng-model="vm.appointment.date_at" ng-change="vm.changeDate()" date-to-string required/>
                   <div ng-messages="form.date_at.$error" role="alert" class="help-block" ng-if="form.date_at.$invalid && form.$submitted">
                     <small ng-message="required">Campo obrigatório</small>
                   </div>

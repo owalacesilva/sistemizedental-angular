@@ -1,0 +1,124 @@
+<app-auth-layout heading="Welcome back" subheading="Sign in to manage your clinic.">
+  <form class="space-y-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (errorMessage(); as message) {
+      <app-alert tone="error">{{ message }}</app-alert>
+    }
+
+    <div>
+      <label class="app-label" for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        class="app-input"
+        [class.app-input-invalid]="form.controls.email.touched && form.controls.email.invalid"
+        formControlName="email"
+        autocomplete="username"
+        placeholder="you@clinic.com"
+        [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid"
+      />
+      <app-field-error [control]="form.controls.email" label="Email" />
+    </div>
+
+    <div>
+      <div class="flex items-baseline justify-between">
+        <label class="app-label" for="password">Password</label>
+        <a
+          class="text-brand-600 hover:text-brand-700 mb-1.5 text-xs font-medium hover:underline"
+          routerLink="/login"
+          fragment="reset"
+        >
+          Forgot password?
+        </a>
+      </div>
+      <div class="relative">
+        <input
+          id="password"
+          class="app-input pr-11"
+          [class.app-input-invalid]="
+            form.controls.password.touched && form.controls.password.invalid
+          "
+          [type]="passwordVisible() ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+        />
+        <button
+          type="button"
+          class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 transition hover:text-slate-600"
+          (click)="togglePasswordVisibility()"
+          [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'"
+          [attr.aria-pressed]="passwordVisible()"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            @if (passwordVisible()) {
+              <path
+                d="M3.28 2.22a.75.75 0 1 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-2.2-2.2A9.9 9.9 0 0 0 18.4 10.6a1 1 0 0 0 0-1.2C17 7.2 13.8 4.5 10 4.5c-1.2 0-2.3.27-3.3.72L3.28 2.22Zm5.1 5.1 4.3 4.3a3 3 0 0 1-4.3-4.3Z"
+              />
+              <path
+                d="M10 15.5c1 0 2-.2 2.9-.55l-1.6-1.6a3 3 0 0 1-3.65-3.65L5.3 7.35A10.3 10.3 0 0 0 1.6 9.4a1 1 0 0 0 0 1.2C3 12.8 6.2 15.5 10 15.5Z"
+              />
+            } @else {
+              <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+              <path
+                fill-rule="evenodd"
+                d="M1.6 9.4a1 1 0 0 0 0 1.2C3 12.8 6.2 15.5 10 15.5s7-2.7 8.4-4.9a1 1 0 0 0 0-1.2C17 7.2 13.8 4.5 10 4.5S3 7.2 1.6 9.4ZM10 14a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"
+                clip-rule="evenodd"
+              />
+            }
+          </svg>
+        </button>
+      </div>
+      <app-field-error [control]="form.controls.password" label="Password" />
+    </div>
+
+    <label class="flex cursor-pointer items-center gap-2.5 text-sm text-slate-600 select-none">
+      <input
+        type="checkbox"
+        class="text-brand-600 focus:ring-brand-400 h-4 w-4 rounded border-slate-300"
+        formControlName="rememberMe"
+      />
+      Keep me signed in
+    </label>
+
+    <button
+      type="submit"
+      class="bg-brand-600 hover:bg-brand-700 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-brand)] transition disabled:cursor-not-allowed disabled:opacity-60"
+      [disabled]="submitting()"
+    >
+      @if (submitting()) {
+        <app-spinner />
+        Signing in…
+      } @else {
+        Sign in
+      }
+    </button>
+
+    @if (demoCredentials; as demo) {
+      <div class="border-brand-200 bg-brand-50 rounded-lg border border-dashed p-3.5 text-xs">
+        <p class="text-brand-900 font-medium">Demo mode is on</p>
+        <p class="text-brand-800/80 mt-1">
+          The API is optional here — sign in with
+          <span class="font-mono">{{ demo.email }}</span> to explore the app.
+        </p>
+        <button
+          type="button"
+          class="text-brand-700 hover:text-brand-900 mt-2 text-xs font-semibold underline underline-offset-2"
+          (click)="fillDemoCredentials()"
+        >
+          Fill demo credentials
+        </button>
+      </div>
+    }
+
+    <p class="text-center text-sm text-slate-500">
+      New to Sistemize Dental?
+      <a
+        class="text-brand-600 hover:text-brand-700 font-semibold hover:underline"
+        routerLink="/sign-up"
+      >
+        Create an account
+      </a>
+    </p>
+  </form>
+</app-auth-layout>

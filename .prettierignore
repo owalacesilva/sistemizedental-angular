@@ -1,0 +1,7 @@
+.angular
+coverage
+dist
+docker
+legacy
+node_modules
+package-lock.json

@@ -1,0 +1,185 @@
+<app-auth-layout
+  heading="Create your account"
+  subheading="Set up your clinic in a couple of minutes. No card required."
+>
+  <form class="space-y-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (errorMessage(); as message) {
+      <app-alert tone="error">{{ message }}</app-alert>
+    }
+
+    <div>
+      <label class="app-label" for="clinicName">Clinic name</label>
+      <input
+        id="clinicName"
+        type="text"
+        class="app-input"
+        [class.app-input-invalid]="
+          form.controls.clinicName.touched && form.controls.clinicName.invalid
+        "
+        formControlName="clinicName"
+        autocomplete="organization"
+        placeholder="Bright Smile Dental"
+      />
+      <app-field-error [control]="form.controls.clinicName" label="Clinic name" />
+    </div>
+
+    <div>
+      <label class="app-label" for="displayName">Your name</label>
+      <input
+        id="displayName"
+        type="text"
+        class="app-input"
+        [class.app-input-invalid]="
+          form.controls.displayName.touched && form.controls.displayName.invalid
+        "
+        formControlName="displayName"
+        autocomplete="name"
+        placeholder="Dr. Alex Moreira"
+      />
+      <app-field-error [control]="form.controls.displayName" label="Your name" />
+    </div>
+
+    <div>
+      <label class="app-label" for="signupEmail">Work email</label>
+      <input
+        id="signupEmail"
+        type="email"
+        class="app-input"
+        [class.app-input-invalid]="form.controls.email.touched && form.controls.email.invalid"
+        formControlName="email"
+        autocomplete="email"
+        placeholder="you@clinic.com"
+      />
+      <app-field-error [control]="form.controls.email" label="Work email" />
+    </div>
+
+    <div>
+      <label class="app-label" for="signupPassword">Password</label>
+      <div class="relative">
+        <input
+          id="signupPassword"
+          class="app-input pr-11"
+          [class.app-input-invalid]="
+            form.controls.password.touched && form.controls.password.invalid
+          "
+          [type]="passwordVisible() ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="new-password"
+          placeholder="At least 8 characters"
+        />
+        <button
+          type="button"
+          class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 transition hover:text-slate-600"
+          (click)="togglePasswordVisibility()"
+          [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'"
+          [attr.aria-pressed]="passwordVisible()"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            @if (passwordVisible()) {
+              <path
+                d="M3.28 2.22a.75.75 0 1 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-2.2-2.2A9.9 9.9 0 0 0 18.4 10.6a1 1 0 0 0 0-1.2C17 7.2 13.8 4.5 10 4.5c-1.2 0-2.3.27-3.3.72L3.28 2.22Zm5.1 5.1 4.3 4.3a3 3 0 0 1-4.3-4.3Z"
+              />
+              <path
+                d="M10 15.5c1 0 2-.2 2.9-.55l-1.6-1.6a3 3 0 0 1-3.65-3.65L5.3 7.35A10.3 10.3 0 0 0 1.6 9.4a1 1 0 0 0 0 1.2C3 12.8 6.2 15.5 10 15.5Z"
+              />
+            } @else {
+              <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+              <path
+                fill-rule="evenodd"
+                d="M1.6 9.4a1 1 0 0 0 0 1.2C3 12.8 6.2 15.5 10 15.5s7-2.7 8.4-4.9a1 1 0 0 0 0-1.2C17 7.2 13.8 4.5 10 4.5S3 7.2 1.6 9.4ZM10 14a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"
+                clip-rule="evenodd"
+              />
+            }
+          </svg>
+        </button>
+      </div>
+
+      <div class="mt-2.5">
+        <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+          <div
+            class="h-full rounded-full transition-all duration-300"
+            [class]="strengthBarClass()"
+            [style.width]="strengthWidth()"
+          ></div>
+        </div>
+        <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span class="text-xs font-medium text-slate-600">{{ strengthLabel() }}</span>
+          @for (check of strengthChecks(); track check.label) {
+            <span class="text-xs" [class]="check.passed ? 'text-emerald-600' : 'text-slate-400'">
+              {{ check.passed ? '✓' : '○' }} {{ check.label }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <app-field-error [control]="form.controls.password" label="Password" />
+    </div>
+
+    <div>
+      <label class="app-label" for="confirmPassword">Confirm password</label>
+      <input
+        id="confirmPassword"
+        [type]="passwordVisible() ? 'text' : 'password'"
+        class="app-input"
+        [class.app-input-invalid]="
+          form.controls.confirmPassword.touched && form.controls.confirmPassword.invalid
+        "
+        formControlName="confirmPassword"
+        autocomplete="new-password"
+        placeholder="Repeat your password"
+      />
+      <app-field-error [control]="form.controls.confirmPassword" label="Confirm password" />
+    </div>
+
+    <div>
+      <label class="flex cursor-pointer items-start gap-2.5 text-sm text-slate-600 select-none">
+        <input
+          id="acceptTerms"
+          type="checkbox"
+          class="text-brand-600 focus:ring-brand-400 mt-0.5 h-4 w-4 rounded border-slate-300"
+          formControlName="acceptTerms"
+        />
+        <span>
+          I agree to the
+          <a
+            class="text-brand-600 font-medium hover:underline"
+            routerLink="/sign-up"
+            fragment="terms"
+            >Terms of Service</a
+          >
+          and
+          <a
+            class="text-brand-600 font-medium hover:underline"
+            routerLink="/sign-up"
+            fragment="privacy"
+            >Privacy Policy</a
+          >.
+        </span>
+      </label>
+      <app-field-error [control]="form.controls.acceptTerms" label="Terms" />
+    </div>
+
+    <button
+      type="submit"
+      class="bg-brand-600 hover:bg-brand-700 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-brand)] transition disabled:cursor-not-allowed disabled:opacity-60"
+      [disabled]="submitting()"
+    >
+      @if (submitting()) {
+        <app-spinner />
+        Creating account…
+      } @else {
+        Create account
+      }
+    </button>
+
+    <p class="text-center text-sm text-slate-500">
+      Already have an account?
+      <a
+        class="text-brand-600 hover:text-brand-700 font-semibold hover:underline"
+        routerLink="/login"
+      >
+        Sign in
+      </a>
+    </p>
+  </form>
+</app-auth-layout>

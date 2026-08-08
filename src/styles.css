@@ -1,0 +1,67 @@
+@import 'tailwindcss';
+
+/*
+ * Sistemize Dental design tokens.
+ * Brand ramp is built around the project palette:
+ *   #03045e  Federal Blue      -> brand-900
+ *   #0077b6  Honolulu Blue     -> brand-600  (primary action)
+ *   #00b4d8  Pacific Cyan      -> brand-400  (accent / focus)
+ *   #90e0ef  Non Photo Blue    -> brand-200
+ *   #caf0f8  Light Cyan        -> brand-50   (surfaces)
+ */
+@theme {
+  --color-brand-50: #caf0f8;
+  --color-brand-100: #ade8f4;
+  --color-brand-200: #90e0ef;
+  --color-brand-300: #48cae4;
+  --color-brand-400: #00b4d8;
+  --color-brand-500: #0096c7;
+  --color-brand-600: #0077b6;
+  --color-brand-700: #023e8a;
+  --color-brand-800: #022174;
+  --color-brand-900: #03045e;
+  --color-brand-950: #01022f;
+
+  --font-sans:
+    'Inter var', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+
+  --shadow-brand: 0 10px 30px -12px rgb(3 4 94 / 0.35);
+  --shadow-card: 0 1px 2px 0 rgb(3 4 94 / 0.06), 0 4px 16px -4px rgb(3 4 94 / 0.08);
+
+  --radius-xl2: 1.25rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+    font-family: var(--font-sans);
+  }
+
+  /* Consistent, palette-aware focus ring across every interactive element. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    @apply ring-brand-400 rounded-md ring-2 ring-offset-2 ring-offset-white outline-none;
+  }
+}
+
+@layer components {
+  .app-input {
+    @apply focus:border-brand-400 focus:ring-brand-400/40 block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-xs transition placeholder:text-slate-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100;
+  }
+
+  .app-input-invalid {
+    @apply border-rose-400 focus:border-rose-500 focus:ring-rose-400/40;
+  }
+
+  .app-label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  .app-card {
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-[var(--shadow-card)];
+  }
+}

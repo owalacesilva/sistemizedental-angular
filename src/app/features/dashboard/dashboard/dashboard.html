@@ -1,0 +1,183 @@
+<div class="mx-auto max-w-7xl space-y-6">
+  <!-- Page header -->
+  <header class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-brand-900 text-2xl font-semibold tracking-tight">
+        Good to see you, {{ firstName() }}
+      </h1>
+      <p class="mt-1 text-sm text-slate-500">
+        Here's how your clinic is doing on
+        {{
+          today.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
+        }}.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-60"
+      (click)="reload()"
+      [disabled]="data.isLoading()"
+    >
+      @if (data.isLoading()) {
+        <app-spinner />
+      } @else {
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
+        </svg>
+      }
+      Refresh
+    </button>
+  </header>
+
+  @if (errorMessage(); as message) {
+    <app-alert tone="error">{{ message }}</app-alert>
+  }
+
+  @if (isDemoData()) {
+    <app-alert tone="info">
+      Showing sample data — the API at <code class="font-mono">/api</code> is not reachable, so the
+      demo backend is filling in.
+    </app-alert>
+  }
+
+  <!-- Metrics -->
+  @if (metrics(); as m) {
+    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key metrics">
+      <app-stat-card
+        label="Appointments today"
+        [value]="m.appointmentsToday | number"
+        [icon]="icons.calendar"
+        caption="+12%"
+        trend="up"
+      />
+      <app-stat-card
+        label="New patients this month"
+        [value]="m.newPatientsThisMonth | number"
+        [icon]="icons.users"
+        caption="+6%"
+        trend="up"
+      />
+      <app-stat-card
+        label="Revenue this month"
+        [value]="'R$ ' + (m.revenueThisMonth | number: '1.0-0')"
+        [icon]="icons.money"
+        caption="+4%"
+        trend="up"
+      />
+      <app-stat-card
+        label="Chair occupancy"
+        [value]="m.chairOccupancy | percent: '1.0-0'"
+        [icon]="icons.gauge"
+        caption="-2%"
+        trend="down"
+      />
+    </section>
+  } @else if (data.isLoading()) {
+    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-hidden="true">
+      @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+        <div class="app-card animate-pulse p-5">
+          <div class="h-4 w-24 rounded bg-slate-200"></div>
+          <div class="mt-4 h-7 w-16 rounded bg-slate-200"></div>
+          <div class="mt-3 h-3 w-28 rounded bg-slate-100"></div>
+        </div>
+      }
+    </section>
+  }
+
+  <div class="grid gap-6 lg:grid-cols-5">
+    <!-- Today's schedule -->
+    <section class="app-card lg:col-span-3" aria-label="Today's schedule">
+      <header class="flex items-center justify-between border-b border-slate-200/70 px-5 py-4">
+        <h2 class="text-brand-900 font-semibold">Today's schedule</h2>
+        <span class="text-xs font-medium text-slate-400"
+          >{{ appointments().length }} appointments</span
+        >
+      </header>
+
+      @if (data.isLoading() && !appointments().length) {
+        <div class="flex items-center gap-2 px-5 py-10 text-sm text-slate-500">
+          <app-spinner />
+          Loading schedule…
+        </div>
+      } @else if (!appointments().length) {
+        <p class="px-5 py-10 text-center text-sm text-slate-500">
+          Nothing booked yet. Enjoy the quiet day.
+        </p>
+      } @else {
+        <ul class="divide-y divide-slate-100">
+          @for (appointment of appointments(); track appointment.id) {
+            <li class="flex items-center gap-4 px-5 py-3.5 transition hover:bg-slate-50/70">
+              <span
+                class="text-brand-700 bg-brand-50 w-16 shrink-0 rounded-lg py-1.5 text-center text-sm font-semibold"
+              >
+                {{ time(appointment.startsAt) }}
+              </span>
+
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold text-slate-800">
+                  {{ appointment.patientName }}
+                </p>
+                <p class="truncate text-xs text-slate-500">
+                  {{ appointment.procedure }} · {{ appointment.doctorName }}
+                </p>
+              </div>
+
+              <span
+                class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset"
+                [class]="statusClass(appointment.status)"
+              >
+                {{ appointment.status }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Recent patients: below the fold, so defer until it scrolls into view -->
+    <section class="lg:col-span-2" aria-label="Recent patients">
+      @defer (on viewport) {
+        <div class="app-card">
+          <header class="flex items-center justify-between border-b border-slate-200/70 px-5 py-4">
+            <h2 class="text-brand-900 font-semibold">Recent patients</h2>
+          </header>
+
+          @if (!patients().length) {
+            <p class="px-5 py-10 text-center text-sm text-slate-500">No patients yet.</p>
+          } @else {
+            <ul class="divide-y divide-slate-100">
+              @for (patient of patients(); track patient.id) {
+                <li class="flex items-center gap-3 px-5 py-3.5 transition hover:bg-slate-50/70">
+                  <app-avatar [name]="patient.name" />
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold text-slate-800">{{ patient.name }}</p>
+                    <p class="truncate text-xs text-slate-500">
+                      {{ patient.phone ?? 'No phone on file' }}
+                    </p>
+                  </div>
+                  <span class="shrink-0 text-xs text-slate-400">
+                    {{ relativeDay(patient.lastVisit) }}
+                  </span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      } @placeholder (minimum 100ms) {
+        <div class="app-card h-72 animate-pulse"></div>
+      }
+    </section>
+  </div>
+</div>

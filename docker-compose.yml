@@ -1,0 +1,49 @@
+name: sistemizedental
+
+services:
+  # Development server with hot reload: http://localhost:4200
+  web:
+    build:
+      context: .
+      target: development
+    ports:
+      - '${DEV_PORT:-4200}:4200'
+    volumes:
+      # Source is bind-mounted; node_modules and .angular stay inside the image
+      # so host/container binaries and caches never collide.
+      - .:/app
+      - node_modules:/app/node_modules
+      - angular_cache:/app/.angular
+    environment:
+      - NODE_ENV=development
+      # Fallback file watching — inotify is unreliable across the bind mount.
+      - CHOKIDAR_USEPOLLING=true
+    stdin_open: true
+    tty: true
+
+  # Production image (nginx): docker compose --profile prod up --build
+  web-prod:
+    profiles: ['prod']
+    build:
+      context: .
+      target: production
+    ports:
+      - '${PROD_PORT:-8080}:8080'
+    restart: unless-stopped
+
+  # Lint + unit tests, for CI or a local pre-flight:
+  #   docker compose --profile ci run --rm ci
+  ci:
+    profiles: ['ci']
+    build:
+      context: .
+      target: deps
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    command: sh -c "npm run lint && npm run test:ci"
+
+volumes:
+  node_modules:
+  angular_cache:
