@@ -33,9 +33,3 @@ export interface DashboardData {
   /** True when the data came from the in-memory demo backend. */
   readonly isDemoData: boolean;
 }
-
-/** Envelope every legacy `*.query()` endpoint returns. */
-export interface Paginated<T> {
-  readonly rows: readonly T[];
-  readonly count: number;
-}

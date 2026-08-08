@@ -5,12 +5,10 @@ import { Observable, catchError, map, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { apiUrl } from '../api/api-url';
 import { errorMessageFrom } from '../api/api-error';
+import { isUnreachable } from '../api/demo-fallback';
 import type { LoginCredentials, Session, SignUpPayload, TokenResponse } from './auth.models';
 import { AuthStorage } from './auth.storage';
 import { DemoAuthBackend } from './demo-auth.backend';
-
-/** Status codes that mean "the API never answered", not "the API said no". */
-const UNREACHABLE_STATUSES = new Set([0, 502, 503, 504]);
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -78,8 +76,7 @@ export class AuthService {
     error: HttpErrorResponse,
     fallback: () => Observable<Session>,
   ): Observable<Session> {
-    const unreachable = UNREACHABLE_STATUSES.has(error.status);
-    if (environment.allowDemoFallback && unreachable) {
+    if (environment.allowDemoFallback && isUnreachable(error)) {
       return fallback();
     }
 

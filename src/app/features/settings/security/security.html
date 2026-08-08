@@ -1,0 +1,82 @@
+<div class="space-y-4">
+  @if (errorMessage(); as message) {
+    <app-alert tone="error">{{ message }}</app-alert>
+  }
+
+  @if (saved()) {
+    <app-alert tone="success">Password updated. Use it the next time you sign in.</app-alert>
+  }
+
+  <form class="app-card p-5 sm:p-6" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <fieldset class="space-y-5">
+      <legend class="text-brand-900 text-base font-semibold">Change password</legend>
+
+      <p class="text-sm text-slate-500">
+        Signed in as
+        <span class="font-medium text-slate-700">{{ account()?.email ?? 'this account' }}</span
+        >.
+      </p>
+
+      <div>
+        <label class="app-label" for="currentPassword">Current password</label>
+        <input
+          id="currentPassword"
+          type="password"
+          class="app-input"
+          [class.app-input-invalid]="
+            form.controls.currentPassword.invalid && form.controls.currentPassword.touched
+          "
+          formControlName="currentPassword"
+          autocomplete="current-password"
+        />
+        <app-field-error [control]="form.controls.currentPassword" label="Current password" />
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label class="app-label" for="newPassword">New password</label>
+          <input
+            id="newPassword"
+            type="password"
+            class="app-input"
+            [class.app-input-invalid]="
+              form.controls.newPassword.invalid && form.controls.newPassword.touched
+            "
+            formControlName="newPassword"
+            autocomplete="new-password"
+          />
+          <p class="mt-1.5 text-xs text-slate-400">At least {{ minLength }} characters.</p>
+          <app-field-error [control]="form.controls.newPassword" label="New password" />
+        </div>
+
+        <div>
+          <label class="app-label" for="confirmPassword">Confirm new password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            class="app-input"
+            [class.app-input-invalid]="
+              form.controls.confirmPassword.invalid && form.controls.confirmPassword.touched
+            "
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+          />
+          <app-field-error [control]="form.controls.confirmPassword" label="Confirmation" />
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="mt-6 flex items-center gap-3 border-t border-slate-200/70 pt-5">
+      <button
+        type="submit"
+        class="bg-brand-600 hover:bg-brand-700 flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition disabled:opacity-60"
+        [disabled]="saving()"
+      >
+        @if (saving()) {
+          <app-spinner />
+        }
+        Update password
+      </button>
+    </div>
+  </form>
+</div>

@@ -13,6 +13,7 @@ const MESSAGES: Record<string, MessageFactory> = {
     const required = (error as { requiredLength: number }).requiredLength;
     return `${label} must be at most ${required} characters.`;
   },
+  pattern: (_error, label) => `${label} is not in the expected format.`,
   passwordMismatch: () => 'Passwords do not match.',
   mustAccept: () => 'You must accept the terms to continue.',
 };

@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { rxResource } from '@angular/core/rxjs-interop';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { relativeDay } from '../../../shared/format/dates';
 import { Alert } from '../../../shared/ui/alert/alert';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import { Spinner } from '../../../shared/ui/spinner/spinner';
@@ -64,25 +65,7 @@ export class Dashboard {
     return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   }
 
-  protected relativeDay(iso: string | null): string {
-    if (!iso) {
-      return 'No visits yet';
-    }
-
-    const days = Math.round((Date.now() - new Date(iso).getTime()) / 86_400_000);
-    if (days <= 0) {
-      return 'Today';
-    }
-    if (days === 1) {
-      return 'Yesterday';
-    }
-    if (days < 30) {
-      return `${days} days ago`;
-    }
-
-    const months = Math.round(days / 30);
-    return months === 1 ? '1 month ago' : `${months} months ago`;
-  }
+  protected readonly relativeDay = relativeDay;
 
   protected reload(): void {
     this.data.reload();

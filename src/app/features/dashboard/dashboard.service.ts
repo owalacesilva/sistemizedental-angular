@@ -5,11 +5,11 @@ import { Observable, catchError, forkJoin, map, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { apiUrl } from '../../core/api/api-url';
 import { errorMessageFrom } from '../../core/api/api-error';
+import type { Paginated } from '../../core/api/api.models';
 import type {
   AppointmentSummary,
   DashboardData,
   DashboardMetrics,
-  Paginated,
   PatientSummary,
 } from './dashboard.models';
 import { demoDashboardData } from './demo-dashboard.data';

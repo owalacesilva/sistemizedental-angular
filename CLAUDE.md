@@ -13,9 +13,10 @@ Feature-first, not type-first. Code is grouped by what it does, so a feature can
 deleted or moved in one piece.
 
 - `src/app/core/` — app-wide singletons: `auth/` (service, guards, interceptor, storage,
-  models), `api/` (URL joining, error normalisation). Injectable, no UI.
+  models), `api/` (URL joining, error normalisation, the `Paginated` envelope and
+  `pageQuery` helper, demo fallback). Injectable, no UI.
 - `src/app/shared/` — reusable, feature-agnostic pieces: `ui/` (presentational
-  components), `forms/` (validators, validation messages).
+  components), `forms/` (validators, validation messages), `format/` (date helpers).
 - `src/app/layout/` — the authenticated app shell (sidebar, topbar) and its navigation
   definition.
 - `src/app/features/<feature>/` — a routed feature. Holds its own `*.routes.ts`,
@@ -71,6 +72,22 @@ value on later requests. A 401 clears the session and redirects to `/login`.
 When `environment.allowDemoFallback` is true (development only) and the API is
 _unreachable_ — status 0/502/503/504 — the in-memory `DemoAuthBackend` and
 `demoDashboardData()` take over. A real rejection (401, 422, …) is always surfaced.
+
+## Demo data
+
+Every feature service pipes its request through `withDemoFallback()`
+(`core/api/demo-fallback.ts`), which substitutes that feature's `demo-*.data.ts` on an
+unreachable API. Each page then surfaces an info alert when the data it rendered is
+sample data, so demo content is never mistaken for the clinic's own. `DashboardService`
+predates the helper and still falls back on _any_ error.
+
+## Ported screens
+
+`dashboard`, `calendar`, `patients`, `doctors`, `financial` and `settings` are live. The
+`financial` and `settings` features are shells with lazy child routes (statement /
+payables / payment-methods, and profile / address / security); their route wiring is
+covered by `*.routes.spec.ts`. Record forms ("New patient", "Add doctor", "New bill", …)
+are still on the legacy side, so those buttons render disabled with a title saying so.
 
 ## Commands
 

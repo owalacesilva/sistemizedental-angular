@@ -1,0 +1,182 @@
+<div class="mx-auto max-w-7xl space-y-6">
+  <app-page-header heading="Patients" description="Everyone who has ever booked with the clinic.">
+    <button
+      type="button"
+      class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-60"
+      (click)="reload()"
+      [disabled]="result.isLoading()"
+    >
+      @if (result.isLoading()) {
+        <app-spinner />
+      } @else {
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
+        </svg>
+      }
+      Refresh
+    </button>
+
+    <button
+      type="button"
+      class="bg-brand-600 flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+      disabled
+      title="The patient record form is still being ported from the legacy app."
+    >
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      New patient
+    </button>
+  </app-page-header>
+
+  @if (errorMessage(); as message) {
+    <app-alert tone="error">{{ message }}</app-alert>
+  }
+
+  @if (isDemoData()) {
+    <app-alert tone="info">
+      Showing sample records — the API at <code class="font-mono">/api</code> is not reachable, so
+      the demo backend is filling in.
+    </app-alert>
+  }
+
+  <section class="app-card overflow-hidden" aria-label="Patient list">
+    <!-- Filters -->
+    <div class="flex flex-wrap items-center gap-3 border-b border-slate-200/70 px-5 py-4">
+      <div class="relative min-w-0 flex-1 sm:max-w-xs">
+        <svg
+          class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"
+          />
+        </svg>
+        <input
+          type="search"
+          class="app-input pl-9"
+          [formControl]="searchControl"
+          placeholder="Search patients…"
+          aria-label="Search patients"
+        />
+      </div>
+
+      <label class="flex items-center gap-2 text-xs font-medium text-slate-500">
+        Search by
+        <select
+          class="app-input w-auto py-2 text-sm"
+          [value]="field()"
+          (change)="selectField($any($event.target).value)"
+          aria-label="Field to search"
+        >
+          @for (option of searchFields; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+
+      <p class="ml-auto text-xs font-medium text-slate-400">
+        {{ total() }} {{ total() === 1 ? 'patient' : 'patients' }}
+      </p>
+    </div>
+
+    @if (result.isLoading() && !rows().length) {
+      <div class="flex items-center gap-2 px-5 py-12 text-sm text-slate-500">
+        <app-spinner />
+        Loading patients…
+      </div>
+    } @else if (!rows().length) {
+      <app-empty-state
+        [heading]="hasSearch() ? 'No patients match that search' : 'No patients yet'"
+        [description]="
+          hasSearch()
+            ? 'Try a different term, or search by phone or email instead.'
+            : 'Patients appear here as soon as they book their first appointment.'
+        "
+        icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+      >
+        @if (hasSearch()) {
+          <button
+            type="button"
+            class="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+            (click)="clearSearch()"
+          >
+            Clear search
+          </button>
+        }
+      </app-empty-state>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[44rem] text-left text-sm">
+          <thead class="bg-slate-50/70 text-xs tracking-wide text-slate-500 uppercase">
+            <tr>
+              <th scope="col" class="px-5 py-3 font-semibold">Patient</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Region</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Birthday</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Last visit</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (patient of rows(); track patient.id) {
+              <tr class="transition hover:bg-slate-50/70">
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center gap-3">
+                    <app-avatar [name]="patient.name" />
+                    <div class="min-w-0">
+                      <p class="truncate font-semibold text-slate-800">{{ patient.name }}</p>
+                      <p class="truncate text-xs text-slate-500">
+                        {{ patient.phone ?? patient.email ?? 'No contact on file' }}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-5 py-3.5 text-slate-600">{{ region(patient) }}</td>
+                <td class="px-5 py-3.5 text-slate-600">
+                  {{ patient.birthDate ? (patient.birthDate | date: 'd MMM') : '—' }}
+                </td>
+                <td class="px-5 py-3.5 text-slate-500">{{ relativeDay(patient.lastVisit) }}</td>
+                <td class="px-5 py-3.5">
+                  <app-badge [tone]="patient.active ? 'success' : 'neutral'">
+                    {{ patient.active ? 'Active' : 'Inactive' }}
+                  </app-badge>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pagination
+        [page]="page()"
+        [pageSize]="pageSize"
+        [total]="total()"
+        (pageChange)="goToPage($event)"
+      />
+    }
+  </section>
+</div>

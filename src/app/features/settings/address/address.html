@@ -1,0 +1,140 @@
+<div class="space-y-4">
+  @if (loadError(); as message) {
+    <app-alert tone="error">{{ message }}</app-alert>
+  }
+
+  @if (isDemoData()) {
+    <app-alert tone="info">
+      Showing a sample address — the API at <code class="font-mono">/api</code> is not reachable, so
+      changes are not persisted.
+    </app-alert>
+  }
+
+  @if (errorMessage(); as message) {
+    <app-alert tone="error">{{ message }}</app-alert>
+  }
+
+  @if (saved()) {
+    <app-alert tone="success">Address saved.</app-alert>
+  }
+
+  <form class="app-card p-5 sm:p-6" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (resource.isLoading()) {
+      <div class="flex items-center gap-2 py-8 text-sm text-slate-500">
+        <app-spinner />
+        Loading address…
+      </div>
+    } @else {
+      <fieldset class="space-y-5">
+        <legend class="text-brand-900 text-base font-semibold">Clinic address</legend>
+
+        <div class="grid gap-5 sm:grid-cols-3">
+          <div>
+            <label class="app-label" for="postalCode">Postal code</label>
+            <input
+              id="postalCode"
+              type="text"
+              class="app-input"
+              [class.app-input-invalid]="
+                form.controls.postalCode.invalid && form.controls.postalCode.touched
+              "
+              formControlName="postalCode"
+              autocomplete="postal-code"
+              placeholder="01310-100"
+              inputmode="numeric"
+            />
+            <app-field-error [control]="form.controls.postalCode" label="Postal code" />
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="app-label" for="street">Street</label>
+            <input
+              id="street"
+              type="text"
+              class="app-input"
+              [class.app-input-invalid]="
+                form.controls.street.invalid && form.controls.street.touched
+              "
+              formControlName="street"
+              autocomplete="address-line1"
+            />
+            <app-field-error [control]="form.controls.street" label="Street" />
+          </div>
+
+          <div>
+            <label class="app-label" for="number">Number</label>
+            <input
+              id="number"
+              type="text"
+              class="app-input"
+              formControlName="number"
+              inputmode="numeric"
+            />
+          </div>
+
+          <div>
+            <label class="app-label" for="complement">Complement</label>
+            <input
+              id="complement"
+              type="text"
+              class="app-input"
+              formControlName="complement"
+              autocomplete="address-line2"
+              placeholder="Suite, floor…"
+            />
+          </div>
+
+          <div>
+            <label class="app-label" for="neighborhood">Neighbourhood</label>
+            <input id="neighborhood" type="text" class="app-input" formControlName="neighborhood" />
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="app-label" for="city">City</label>
+            <input
+              id="city"
+              type="text"
+              class="app-input"
+              [class.app-input-invalid]="form.controls.city.invalid && form.controls.city.touched"
+              formControlName="city"
+              autocomplete="address-level2"
+            />
+            <app-field-error [control]="form.controls.city" label="City" />
+          </div>
+
+          <div>
+            <label class="app-label" for="state">State</label>
+            <select
+              id="state"
+              class="app-input"
+              [class.app-input-invalid]="form.controls.state.invalid && form.controls.state.touched"
+              formControlName="state"
+            >
+              <option value="">Select…</option>
+              @for (state of states; track state) {
+                <option [value]="state">{{ state }}</option>
+              }
+            </select>
+            <app-field-error [control]="form.controls.state" label="State" />
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="mt-6 flex items-center gap-3 border-t border-slate-200/70 pt-5">
+        <button
+          type="submit"
+          class="bg-brand-600 hover:bg-brand-700 flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition disabled:opacity-60"
+          [disabled]="saving()"
+        >
+          @if (saving()) {
+            <app-spinner />
+          }
+          Save address
+        </button>
+        @if (form.dirty && !saving()) {
+          <span class="text-xs text-slate-400">Unsaved changes</span>
+        }
+      </div>
+    }
+  </form>
+</div>
