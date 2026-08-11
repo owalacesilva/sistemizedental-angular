@@ -1,0 +1,182 @@
+<div class="app-page">
+  <app-page-header [heading]="t('insights.title')" [description]="t('insights.subtitle')">
+    <div class="app-segment" role="group" [attr.aria-label]="t('filters.period')">
+      @for (option of periods; track option.value) {
+        <button
+          type="button"
+          class="app-chip"
+          [class]="period() === option.value ? 'app-chip-on' : 'app-chip-off'"
+          [attr.aria-pressed]="period() === option.value"
+          (click)="selectPeriod(option.value)"
+        >
+          {{ t(option.labelKey) }}
+        </button>
+      }
+    </div>
+
+    <button
+      type="button"
+      class="app-btn app-btn-quiet"
+      (click)="reload()"
+      [disabled]="result.isLoading()"
+    >
+      @if (result.isLoading()) {
+        <app-spinner sizeClass="h-3.5 w-3.5" />
+      }
+      {{ t('common.refresh') }}
+    </button>
+  </app-page-header>
+
+  @if (errorMessage(); as message) {
+    <app-alert tone="error">{{ message }}</app-alert>
+  }
+
+  @if (isDemoData()) {
+    <app-alert tone="info">{{ t('demo.insights') }}</app-alert>
+  }
+
+  @if (!hasData() && result.isLoading()) {
+    <div class="app-card flex items-center gap-2 px-4 py-12 text-sm text-slate-500">
+      <app-spinner />
+      {{ t('insights.loading') }}
+    </div>
+  }
+
+  @if (hasData()) {
+    <!-- Headline numbers -->
+    <section
+      class="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-6"
+      [attr.aria-label]="t('insights.kpi')"
+    >
+      @for (kpi of kpis(); track kpi.key) {
+        <app-kpi-tile
+          [label]="kpi.label"
+          [value]="kpi.value"
+          [series]="kpi.series"
+          [delta]="kpi.delta"
+          [direction]="kpi.direction"
+          [upIsGood]="kpi.upIsGood"
+          [comparedTo]="t('insights.comparedTo')"
+          [noComparison]="t('insights.noComparison')"
+        />
+      }
+    </section>
+
+    <div class="grid gap-3 lg:grid-cols-5">
+      <!-- Revenue vs. expenses -->
+      <section class="app-card lg:col-span-3">
+        <div class="app-card-header">
+          <div>
+            <h2 class="app-card-title">{{ t('insights.trend.title') }}</h2>
+            <p class="text-[11px] text-slate-500">{{ t('insights.trend.caption') }}</p>
+          </div>
+        </div>
+
+        <div class="p-4">
+          @if (trendMaxValue()) {
+            <app-column-chart
+              [points]="trendPoints()"
+              [ticks]="trendTicks()"
+              [max]="trendMaxValue()"
+              [primaryLabel]="t('insights.trend.revenue')"
+              [secondaryLabel]="t('insights.trend.expenses')"
+              [primaryTotal]="trendTotals().revenue"
+              [secondaryTotal]="trendTotals().expenses"
+            />
+          } @else {
+            <p class="py-10 text-center text-xs text-slate-500">{{ t('insights.trend.empty') }}</p>
+          }
+        </div>
+      </section>
+
+      <!-- Appointment outcomes -->
+      <section class="app-card lg:col-span-2">
+        <div class="app-card-header">
+          <div>
+            <h2 class="app-card-title">{{ t('insights.outcomes.title') }}</h2>
+            <p class="text-[11px] text-slate-500">{{ t('insights.outcomes.caption') }}</p>
+          </div>
+        </div>
+
+        <div class="p-4">
+          @if (outcomes().length) {
+            <app-share-bar [segments]="outcomes()" />
+          } @else {
+            <p class="py-10 text-center text-xs text-slate-500">
+              {{ t('insights.outcomes.empty') }}
+            </p>
+          }
+        </div>
+      </section>
+
+      <!-- Busiest hours -->
+      <section class="app-card lg:col-span-3">
+        <div class="app-card-header">
+          <div>
+            <h2 class="app-card-title">{{ t('insights.hours.title') }}</h2>
+            <p class="text-[11px] text-slate-500">{{ t('insights.hours.caption') }}</p>
+          </div>
+        </div>
+
+        <div class="p-4">
+          @if (hasHours()) {
+            <app-heat-grid
+              [rows]="heatRows()"
+              [hours]="hours"
+              [lessLabel]="t('insights.hours.less')"
+              [moreLabel]="t('insights.hours.more')"
+            />
+          } @else {
+            <p class="py-10 text-center text-xs text-slate-500">{{ t('insights.hours.empty') }}</p>
+          }
+        </div>
+      </section>
+
+      <!-- Top procedures -->
+      <section class="app-card lg:col-span-2">
+        <div class="app-card-header">
+          <div>
+            <h2 class="app-card-title">{{ t('insights.procedures.title') }}</h2>
+            <p class="text-[11px] text-slate-500">{{ t('insights.procedures.caption') }}</p>
+          </div>
+        </div>
+
+        <div class="p-4">
+          @if (procedures().length) {
+            <app-ranked-bars [items]="procedures()" />
+          } @else {
+            <p class="py-10 text-center text-xs text-slate-500">
+              {{ t('insights.procedures.empty') }}
+            </p>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- Payment mix: below the fold, so defer it -->
+    <section [attr.aria-label]="t('insights.payments.title')">
+      @defer (on viewport) {
+        <div class="app-card">
+          <div class="app-card-header">
+            <div>
+              <h2 class="app-card-title">{{ t('insights.payments.title') }}</h2>
+              <p class="text-[11px] text-slate-500">{{ t('insights.payments.caption') }}</p>
+            </div>
+          </div>
+
+          <div class="p-4">
+            @if (payments().length) {
+              <app-share-bar [segments]="payments()" />
+            } @else {
+              <p class="py-10 text-center text-xs text-slate-500">
+                {{ t('insights.payments.empty') }}
+              </p>
+            }
+          </div>
+        </div>
+      } @placeholder (minimum 100ms) {
+        <div class="app-card h-40 animate-pulse"></div>
+      }
+    </section>
+  }
+</div>

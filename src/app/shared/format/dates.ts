@@ -1,5 +1,3 @@
-const MS_PER_DAY = 86_400_000;
-
 export function startOfDay(date: Date): Date {
   const copy = new Date(date);
   copy.setHours(0, 0, 0, 0);
@@ -37,26 +35,16 @@ export function isToday(date: Date): boolean {
   return startOfDay(date).getTime() === startOfDay(new Date()).getTime();
 }
 
-/**
- * Coarse "how long ago" label for a visit date. Deliberately coarse — the exact
- * timestamp is never what a receptionist is scanning for.
- */
-export function relativeDay(iso: string | null): string {
-  if (!iso) {
-    return 'No visits yet';
-  }
+/** First day of the month `offset` months from `date`. */
+export function addMonths(date: Date, offset: number): Date {
+  return new Date(date.getFullYear(), date.getMonth() + offset, 1);
+}
 
-  const days = Math.round((Date.now() - new Date(iso).getTime()) / MS_PER_DAY);
-  if (days <= 0) {
-    return 'Today';
-  }
-  if (days === 1) {
-    return 'Yesterday';
-  }
-  if (days < 30) {
-    return `${days} days ago`;
-  }
+export function startOfYear(date: Date): Date {
+  return new Date(date.getFullYear(), 0, 1);
+}
 
-  const months = Math.round(days / 30);
-  return months === 1 ? '1 month ago' : `${months} months ago`;
+/** `YYYY-MM`, the key the insights charts group months by. */
+export function toIsoMonth(date: Date): string {
+  return `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}`;
 }

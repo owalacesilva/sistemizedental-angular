@@ -72,7 +72,7 @@ describe('Dashboard', () => {
 
     expect(text).toContain('Marina Alves');
     expect(text).toContain('Routine cleaning');
-    expect(text).toContain('confirmed');
+    expect(text).toContain('Confirmed');
   });
 
   it('shows an empty state when nothing is booked', async () => {

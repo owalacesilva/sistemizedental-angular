@@ -3,6 +3,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import type { AbstractControl, ControlEvent } from '@angular/forms';
 import { EMPTY, switchMap } from 'rxjs';
 
+import { injectT } from '../../../core/i18n/translate';
 import { firstValidationMessage } from '../../forms/validation-messages';
 
 /**
@@ -19,13 +20,16 @@ import { firstValidationMessage } from '../../forms/validation-messages';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (message(); as text) {
-      <p class="mt-1.5 text-xs font-medium text-rose-600">{{ text }}</p>
+      <p class="mt-1 text-xs font-medium text-rose-600">{{ text }}</p>
     }
   `,
 })
 export class FieldError {
   readonly control = input.required<AbstractControl | null>();
-  readonly label = input('This field');
+  /** Already-translated field name, woven into messages like "{label} is required." */
+  readonly label = input<string | null>(null);
+
+  private readonly t = injectT();
 
   private readonly events = toSignal<ControlEvent | null>(
     toObservable(this.control).pipe(switchMap((control) => control?.events ?? EMPTY)),
@@ -40,6 +44,10 @@ export class FieldError {
       return null;
     }
 
-    return firstValidationMessage(control.errors, this.label());
+    return firstValidationMessage(
+      control.errors,
+      this.label() ?? this.t('validation.fallbackLabel'),
+      this.t,
+    );
   });
 }

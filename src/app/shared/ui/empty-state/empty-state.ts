@@ -5,12 +5,12 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   selector: 'app-empty-state',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="flex flex-col items-center px-6 py-14 text-center">
+    <div class="flex flex-col items-center px-6 py-10 text-center">
       <span
-        class="bg-brand-50 text-brand-500 inline-flex h-12 w-12 items-center justify-center rounded-full"
+        class="bg-brand-50 text-brand-500 inline-flex h-10 w-10 items-center justify-center rounded-full"
       >
         <svg
-          class="h-6 w-6"
+          class="h-5 w-5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -21,11 +21,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         </svg>
       </span>
 
-      <p class="mt-4 text-sm font-semibold text-slate-700">{{ heading() }}</p>
+      <p class="mt-3 text-sm font-semibold text-slate-700">{{ heading() }}</p>
       @if (description(); as text) {
-        <p class="mt-1 max-w-sm text-sm text-slate-500">{{ text }}</p>
+        <p class="mt-1 max-w-sm text-xs text-slate-500">{{ text }}</p>
       }
-      <div class="mt-5 empty:mt-0"><ng-content /></div>
+      <div class="mt-4 empty:mt-0"><ng-content /></div>
     </div>
   `,
 })

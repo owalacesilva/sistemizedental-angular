@@ -1,0 +1,197 @@
+@if (open()) {
+  <div class="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[12vh] sm:px-6">
+    <button
+      type="button"
+      class="absolute inset-0 cursor-default bg-slate-900/40 backdrop-blur-sm"
+      (click)="close()"
+      [attr.aria-label]="t('common.close')"
+      tabindex="-1"
+    ></button>
+
+    <div
+      class="relative flex w-full max-w-xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="t('search.dialogLabel')"
+    >
+      <!-- Query -->
+      <div class="flex items-center gap-2.5 border-b border-slate-200 px-3.5 py-2.5">
+        <svg
+          class="h-4 w-4 shrink-0 text-slate-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"
+          />
+        </svg>
+
+        <input
+          #searchInput
+          type="text"
+          class="min-w-0 flex-1 border-0 bg-transparent py-1 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus-visible:ring-0"
+          [formControl]="control"
+          [placeholder]="t('search.placeholder')"
+          [attr.aria-label]="t('search.dialogLabel')"
+          role="combobox"
+          aria-expanded="true"
+          aria-controls="global-search-results"
+          autocomplete="off"
+          spellcheck="false"
+          (keydown)="onInputKeydown($event)"
+        />
+
+        @if (isLoading()) {
+          <app-spinner sizeClass="h-4 w-4 text-slate-400" />
+        }
+
+        <kbd
+          class="hidden rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:block"
+        >
+          esc
+        </kbd>
+      </div>
+
+      <!-- Results -->
+      <div
+        id="global-search-results"
+        class="max-h-[52vh] overflow-y-auto py-1.5"
+        role="listbox"
+        [attr.aria-label]="t('search.resultsLabel')"
+      >
+        @if (hasError()) {
+          <p class="px-4 py-6 text-center text-sm text-rose-600">{{ t('search.error') }}</p>
+        }
+
+        @for (section of sections(); track section.key) {
+          <p
+            class="px-3.5 pt-2 pb-1 text-[10px] font-semibold tracking-wider text-slate-400 uppercase"
+          >
+            {{ t(section.labelKey) }}
+          </p>
+
+          @for (row of section.rows; track row.hit.id) {
+            <button
+              type="button"
+              class="flex w-full items-center gap-2.5 px-3.5 py-1.5 text-left transition"
+              [class]="row.index === activeIndex() ? 'bg-brand-50' : 'hover:bg-slate-50'"
+              [attr.data-hit-index]="row.index"
+              [attr.aria-selected]="row.index === activeIndex()"
+              role="option"
+              (click)="choose(row.hit)"
+              (mouseenter)="focusRow(row.index)"
+            >
+              <span
+                class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+                [class]="
+                  row.index === activeIndex()
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-slate-100 text-slate-500'
+                "
+              >
+                <svg
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  aria-hidden="true"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="row.hit.icon" />
+                </svg>
+              </span>
+
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-medium text-slate-800">
+                  @for (part of highlight(row.hit.title, typed()); track $index) {
+                    <span [class.text-brand-700]="part.match" [class.font-semibold]="part.match">{{
+                      part.text
+                    }}</span>
+                  }
+                </span>
+                @if (row.hit.subtitle; as subtitle) {
+                  <span class="block truncate text-xs text-slate-500">{{ subtitle }}</span>
+                }
+              </span>
+
+              <svg
+                class="h-3.5 w-3.5 shrink-0 text-slate-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          }
+        }
+
+        @if (isEmpty()) {
+          <div class="px-4 py-8 text-center">
+            <p class="text-sm font-medium text-slate-700">
+              {{ t('search.empty', { term: typed() }) }}
+            </p>
+            <p class="mt-1 text-xs text-slate-500">{{ t('search.emptyHint') }}</p>
+          </div>
+        }
+
+        <!-- History, only while the box is still empty -->
+        @if (!typed() && recents().length) {
+          <div class="mt-1 border-t border-slate-100 pt-1.5">
+            <div class="flex items-center justify-between px-3.5 pt-1 pb-1">
+              <p class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                {{ t('search.group.recent') }}
+              </p>
+              <button
+                type="button"
+                class="text-[11px] font-medium text-slate-400 transition hover:text-slate-600"
+                (click)="clearRecents()"
+              >
+                {{ t('search.clearRecent') }}
+              </button>
+            </div>
+
+            <div class="flex flex-wrap gap-1.5 px-3.5 pt-1 pb-2">
+              @for (entry of recents(); track entry) {
+                <button
+                  type="button"
+                  class="rounded-full border border-slate-200 px-2.5 py-1 text-xs text-slate-600 transition hover:bg-slate-50"
+                  (click)="useRecent(entry)"
+                >
+                  {{ entry }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Key hints -->
+      <div
+        class="hidden items-center gap-4 border-t border-slate-200 bg-slate-50/70 px-3.5 py-2 text-[11px] text-slate-500 sm:flex"
+      >
+        <span class="flex items-center gap-1">
+          <kbd class="rounded border border-slate-200 bg-white px-1 py-0.5 font-medium">↑↓</kbd>
+          {{ t('search.hintNavigate') }}
+        </span>
+        <span class="flex items-center gap-1">
+          <kbd class="rounded border border-slate-200 bg-white px-1 py-0.5 font-medium">↵</kbd>
+          {{ t('search.hintSelect') }}
+        </span>
+        <span class="ml-auto flex items-center gap-1">
+          <kbd class="rounded border border-slate-200 bg-white px-1 py-0.5 font-medium">{{
+            shortcutHint
+          }}</kbd>
+          {{ t('search.open') }}
+        </span>
+      </div>
+    </div>
+  </div>
+}

@@ -5,7 +5,12 @@ import { type Observable, map } from 'rxjs';
 import { apiUrl } from '../../core/api/api-url';
 import { type Paginated, pageQuery } from '../../core/api/api.models';
 import { withDemoFallback } from '../../core/api/demo-fallback';
-import { demoPayables, demoPaymentMethods, demoStatement } from './demo-financial.data';
+import {
+  demoPayables,
+  demoPaymentMethods,
+  demoStatement,
+  demoTransactions,
+} from './demo-financial.data';
 import type {
   PayableRecord,
   PayablesPage,
@@ -15,7 +20,10 @@ import type {
   StatementQuery,
   TransactionKind,
   TransactionRecord,
+  TransactionsPage,
+  TransactionsQuery,
 } from './financial.models';
+import { sumTransactions } from './financial.totals';
 
 const KINDS: readonly TransactionKind[] = ['income', 'expense', 'cashout', 'supply'];
 const PAYABLES_LIMIT = 50;
@@ -80,6 +88,34 @@ export class FinancialService {
       );
   }
 
+  /**
+   * The same ledger as the statement, but driven by the filter set the legacy
+   * transactions screen exposed: an explicit window, a movement kind, a
+   * settlement state, a description match and a sortable column.
+   */
+  loadTransactions(query: TransactionsQuery): Observable<TransactionsPage> {
+    const { page, limit, offset } = pageQuery(query.page, query.pageSize);
+
+    return this.http
+      .get<Paginated<TransactionRow>>(apiUrl('api/transactions.json'), {
+        params: {
+          page,
+          limit,
+          offset,
+          order: `${query.sort}-${query.direction}`,
+          date_start: query.start,
+          date_end: query.end,
+          ...(query.kind === null ? {} : { kind: query.kind }),
+          ...(query.paid === null ? {} : { paid: query.paid }),
+          ...(query.search ? { search: query.search } : {}),
+        },
+      })
+      .pipe(
+        map((response) => this.toTransactionsPage(response)),
+        withDemoFallback(() => demoTransactions(query)),
+      );
+  }
+
   loadPayables(): Observable<PayablesPage> {
     return this.http
       .get<Paginated<AccountableRow>>(apiUrl('api/accountables.json'), {
@@ -118,6 +154,17 @@ export class FinancialService {
       rows,
       total: response.count ?? rows.length,
       summary: { income, expense, balance: income - expense, pending },
+      isDemoData: false,
+    };
+  }
+
+  private toTransactionsPage(response: Paginated<TransactionRow>): TransactionsPage {
+    const rows = (response.rows ?? []).map((row) => this.toTransaction(row));
+
+    return {
+      rows,
+      total: response.count ?? rows.length,
+      totals: sumTransactions(rows),
       isDemoData: false,
     };
   }

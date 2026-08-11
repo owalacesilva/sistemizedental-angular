@@ -3,7 +3,9 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { rxResource } from '@angular/core/rxjs-interop';
 
 import { AuthService } from '../../../core/auth/auth.service';
-import { relativeDay } from '../../../shared/format/dates';
+import { injectLocale, injectPlural, injectT } from '../../../core/i18n/translate';
+import type { MessageKey } from '../../../core/i18n/messages.en';
+import { injectRelativeDay } from '../../../shared/format/relative-day';
 import { Alert } from '../../../shared/ui/alert/alert';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import { Spinner } from '../../../shared/ui/spinner/spinner';
@@ -27,6 +29,12 @@ const STATUS_STYLES: Record<AppointmentStatus, string> = {
   canceled: 'bg-rose-50 text-rose-700 ring-rose-600/20',
 };
 
+const STATUS_LABELS: Record<AppointmentStatus, MessageKey> = {
+  confirmed: 'dashboard.status.confirmed',
+  pending: 'dashboard.status.pending',
+  canceled: 'dashboard.status.canceled',
+};
+
 @Component({
   selector: 'app-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,8 +45,16 @@ export class Dashboard {
   private readonly dashboard = inject(DashboardService);
   private readonly auth = inject(AuthService);
 
+  protected readonly t = injectT();
+  protected readonly plural = injectPlural();
+  protected readonly locale = injectLocale();
+  protected readonly relativeDay = injectRelativeDay();
+
   protected readonly icons = ICONS;
-  protected readonly firstName = computed(() => this.auth.displayName().split(' ')[0] || 'there');
+
+  protected readonly firstName = computed(
+    () => this.auth.displayName().split(' ')[0] || this.t('dashboard.greetingFallback'),
+  );
 
   protected readonly data = rxResource({ stream: () => this.dashboard.load() });
 
@@ -52,20 +68,28 @@ export class Dashboard {
 
   protected readonly errorMessage = computed(() => {
     const error = this.data.error();
-    return error instanceof Error ? error.message : error ? 'Could not load dashboard data.' : null;
+    return error instanceof Error ? error.message : error ? this.t('dashboard.error') : null;
   });
 
-  protected readonly today = new Date();
+  protected readonly todayLabel = computed(() =>
+    new Date().toLocaleDateString(this.locale(), {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }),
+  );
 
   protected statusClass(status: AppointmentStatus): string {
     return STATUS_STYLES[status];
   }
 
-  protected time(iso: string): string {
-    return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  protected statusLabel(status: AppointmentStatus): string {
+    return this.t(STATUS_LABELS[status]);
   }
 
-  protected readonly relativeDay = relativeDay;
+  protected time(iso: string): string {
+    return new Date(iso).toLocaleTimeString(this.locale(), { hour: '2-digit', minute: '2-digit' });
+  }
 
   protected reload(): void {
     this.data.reload();

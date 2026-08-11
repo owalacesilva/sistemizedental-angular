@@ -43,6 +43,49 @@ export interface StatementQuery {
   readonly pageSize: number;
 }
 
+/** Column the ledger is ordered by; the value is the API's own column name. */
+export type TransactionSortColumn = 'due_date' | 'description' | 'kind' | 'total_amount';
+
+export type SortDirection = 'asc' | 'desc';
+
+/** `null` means "every kind". */
+export type KindFilter = TransactionKind | null;
+
+export interface TransactionsQuery {
+  /** Inclusive window, both `YYYY-MM-DD`. */
+  readonly start: string;
+  readonly end: string;
+  readonly kind: KindFilter;
+  readonly paid: PaidFilter;
+  /** Free text matched against the description. */
+  readonly search: string;
+  readonly sort: TransactionSortColumn;
+  readonly direction: SortDirection;
+  /** 1-based. */
+  readonly page: number;
+  readonly pageSize: number;
+}
+
+/**
+ * Sums for the rows on screen. The legacy endpoint returns a page and a count,
+ * never a total over the whole filter, so these are honestly labelled as
+ * page totals in the UI rather than passed off as the period's.
+ */
+export interface TransactionTotals {
+  readonly inflow: number;
+  readonly outflow: number;
+  readonly net: number;
+  readonly unsettled: number;
+}
+
+export interface TransactionsPage {
+  readonly rows: readonly TransactionRecord[];
+  readonly total: number;
+  readonly totals: TransactionTotals;
+  /** True when the data came from the in-memory demo backend. */
+  readonly isDemoData: boolean;
+}
+
 export interface PayableRecord {
   readonly id: number;
   readonly title: string;

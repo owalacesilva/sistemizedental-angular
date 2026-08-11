@@ -1,147 +1,150 @@
-<div class="space-y-6">
+<div class="space-y-3">
   @if (errorMessage(); as message) {
     <app-alert tone="error">{{ message }}</app-alert>
   }
 
   @if (isDemoData()) {
-    <app-alert tone="info">
-      Showing a sample ledger — the API at <code class="font-mono">/api</code> is not reachable, so
-      the demo backend is filling in.
-    </app-alert>
+    <app-alert tone="info">{{ t('demo.statement') }}</app-alert>
   }
 
   <!-- Totals for the selected window -->
   @if (summary(); as totals) {
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Period totals">
-      <article class="app-card p-5">
-        <p class="text-sm font-medium text-slate-500">Revenue</p>
-        <p class="mt-2 text-2xl font-semibold tracking-tight text-emerald-600">
-          {{ totals.income | currency: 'BRL' : 'R$ ' : '1.2-2' }}
+    <section
+      class="grid grid-cols-2 gap-2 xl:grid-cols-4"
+      [attr.aria-label]="t('statement.totals')"
+    >
+      <article class="app-card px-3 py-2.5">
+        <p class="text-[11px] font-medium text-slate-500">{{ t('statement.revenue') }}</p>
+        <p class="mt-1 text-lg font-semibold tracking-tight text-emerald-600">
+          {{ money(totals.income) }}
         </p>
       </article>
-      <article class="app-card p-5">
-        <p class="text-sm font-medium text-slate-500">Expenses</p>
-        <p class="mt-2 text-2xl font-semibold tracking-tight text-rose-600">
-          {{ totals.expense | currency: 'BRL' : 'R$ ' : '1.2-2' }}
+      <article class="app-card px-3 py-2.5">
+        <p class="text-[11px] font-medium text-slate-500">{{ t('statement.expenses') }}</p>
+        <p class="mt-1 text-lg font-semibold tracking-tight text-rose-600">
+          {{ money(totals.expense) }}
         </p>
       </article>
-      <article class="app-card p-5">
-        <p class="text-sm font-medium text-slate-500">Balance</p>
+      <article class="app-card px-3 py-2.5">
+        <p class="text-[11px] font-medium text-slate-500">{{ t('statement.balance') }}</p>
         <p
-          class="text-brand-900 mt-2 text-2xl font-semibold tracking-tight"
+          class="text-brand-900 mt-1 text-lg font-semibold tracking-tight"
           [class.text-rose-600]="totals.balance < 0"
         >
-          {{ totals.balance | currency: 'BRL' : 'R$ ' : '1.2-2' }}
+          {{ money(totals.balance) }}
         </p>
       </article>
-      <article class="app-card p-5">
-        <p class="text-sm font-medium text-slate-500">Outstanding</p>
-        <p class="mt-2 text-2xl font-semibold tracking-tight text-amber-600">
-          {{ totals.pending | currency: 'BRL' : 'R$ ' : '1.2-2' }}
+      <article class="app-card px-3 py-2.5">
+        <p class="text-[11px] font-medium text-slate-500">{{ t('statement.pending') }}</p>
+        <p class="mt-1 text-lg font-semibold tracking-tight text-amber-600">
+          {{ money(totals.pending) }}
         </p>
       </article>
     </section>
   }
 
-  <section class="app-card overflow-hidden" aria-label="Statement">
-    <!-- Filters -->
-    <div class="flex flex-wrap items-center gap-3 border-b border-slate-200/70 px-5 py-4">
-      <div class="flex flex-wrap items-center gap-1">
-        @for (period of periods; track period.label; let i = $index) {
+  <app-filter-panel
+    panelKey="statement"
+    [activeCount]="activeFilterCount()"
+    (clear)="resetFilters()"
+  >
+    <button
+      panelActions
+      type="button"
+      class="app-btn app-btn-quiet text-xs"
+      (click)="reload()"
+      [disabled]="result.isLoading()"
+    >
+      @if (result.isLoading()) {
+        <app-spinner sizeClass="h-3.5 w-3.5" />
+      }
+      {{ t('common.refresh') }}
+    </button>
+
+    <div>
+      <span class="app-label">{{ t('filters.period') }}</span>
+      <div class="flex flex-wrap gap-1">
+        @for (period of periods; track period.labelKey; let i = $index) {
           <button
             type="button"
-            class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
-            [class]="
-              periodIndex() === i
-                ? 'bg-brand-600 text-white'
-                : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
-            "
+            class="app-chip"
+            [class]="periodIndex() === i ? 'app-chip-on' : 'app-chip-off border border-slate-200'"
+            [attr.aria-pressed]="periodIndex() === i"
             (click)="selectPeriod(i)"
           >
-            {{ period.label }}
+            {{ t(period.labelKey) }}
           </button>
         }
       </div>
-
-      <div class="flex items-center rounded-lg border border-slate-200 p-0.5">
-        @for (option of paidOptions; track option.label) {
-          <button
-            type="button"
-            class="rounded-md px-2.5 py-1 text-xs font-medium transition"
-            [class]="
-              paid() === option.value
-                ? 'bg-slate-900 text-white'
-                : 'text-slate-600 hover:bg-slate-50'
-            "
-            (click)="selectPaid(option.value)"
-          >
-            {{ option.label }}
-          </button>
-        }
-      </div>
-
-      <button
-        type="button"
-        class="ml-auto flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-60"
-        (click)="reload()"
-        [disabled]="result.isLoading()"
-      >
-        @if (result.isLoading()) {
-          <app-spinner sizeClass="h-3.5 w-3.5" />
-        }
-        Refresh
-      </button>
     </div>
 
+    <div>
+      <span class="app-label">{{ t('transactions.settlement') }}</span>
+      <div class="app-segment">
+        @for (option of paidOptions; track option.labelKey) {
+          <button
+            type="button"
+            class="app-chip"
+            [class]="paid() === option.value ? 'app-chip-on' : 'app-chip-off'"
+            [attr.aria-pressed]="paid() === option.value"
+            (click)="selectPaid(option.value)"
+          >
+            {{ t(option.labelKey) }}
+          </button>
+        }
+      </div>
+    </div>
+  </app-filter-panel>
+
+  <section class="app-card overflow-hidden" [attr.aria-label]="t('statement.label')">
     @if (result.isLoading() && !rows().length) {
-      <div class="flex items-center gap-2 px-5 py-12 text-sm text-slate-500">
+      <div class="flex items-center gap-2 px-4 py-10 text-sm text-slate-500">
         <app-spinner />
-        Loading movements…
+        {{ t('statement.loading') }}
       </div>
     } @else if (!rows().length) {
       <app-empty-state
-        heading="No movements in this period"
-        description="Pick a wider period, or clear the settled/outstanding filter."
+        [heading]="t('statement.empty')"
+        [description]="t('statement.emptyHint')"
         icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
       />
     } @else {
       <div class="overflow-x-auto">
-        <table class="w-full min-w-[48rem] text-left text-sm">
-          <thead class="bg-slate-50/70 text-xs tracking-wide text-slate-500 uppercase">
+        <table class="app-table min-w-[46rem]">
+          <thead>
             <tr>
-              <th scope="col" class="px-5 py-3 font-semibold">Due</th>
-              <th scope="col" class="px-5 py-3 font-semibold">Description</th>
-              <th scope="col" class="px-5 py-3 font-semibold">Type</th>
-              <th scope="col" class="px-5 py-3 font-semibold">Payment</th>
-              <th scope="col" class="px-5 py-3 text-right font-semibold">Amount</th>
-              <th scope="col" class="px-5 py-3 font-semibold">Status</th>
+              <th scope="col">{{ t('transactions.column.dueDate') }}</th>
+              <th scope="col">{{ t('transactions.column.description') }}</th>
+              <th scope="col">{{ t('transactions.column.kind') }}</th>
+              <th scope="col">{{ t('transactions.column.paymentMethod') }}</th>
+              <th scope="col" class="text-right">{{ t('transactions.column.amount') }}</th>
+              <th scope="col">{{ t('transactions.column.status') }}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100">
+          <tbody>
             @for (row of rows(); track row.id) {
-              <tr class="transition hover:bg-slate-50/70">
-                <td class="px-5 py-3.5 whitespace-nowrap text-slate-600">
-                  {{ row.dueDate | date: 'dd MMM yyyy' }}
+              <tr>
+                <td class="whitespace-nowrap text-slate-600">
+                  {{ row.dueDate | date: 'dd MMM yyyy' : undefined : locale() }}
                 </td>
-                <td class="px-5 py-3.5">
+                <td>
                   <p class="font-medium text-slate-800">{{ row.description }}</p>
                   @if (row.orderId) {
-                    <p class="text-xs text-slate-400">Order #{{ row.orderId }}</p>
+                    <p class="text-[11px] text-slate-400">
+                      {{ t('transactions.order', { id: row.orderId }) }}
+                    </p>
                   }
                 </td>
-                <td class="px-5 py-3.5">
+                <td>
                   <app-badge [tone]="kindTone(row.kind)">{{ kindLabel(row.kind) }}</app-badge>
                 </td>
-                <td class="px-5 py-3.5 text-slate-600">{{ row.paymentMethod ?? '—' }}</td>
-                <td
-                  class="px-5 py-3.5 text-right font-semibold whitespace-nowrap"
-                  [class]="amountClass(row)"
-                >
-                  {{ row.amount | currency: 'BRL' : 'R$ ' : '1.2-2' }}
+                <td class="text-slate-600">{{ row.paymentMethod ?? '—' }}</td>
+                <td class="text-right font-semibold whitespace-nowrap" [class]="amountClass(row)">
+                  {{ money(row.amount) }}
                 </td>
-                <td class="px-5 py-3.5">
+                <td>
                   <app-badge [tone]="row.paid ? 'success' : 'warning'">
-                    {{ row.paid ? 'Settled' : 'Outstanding' }}
+                    {{ row.paid ? t('common.settled') : t('common.outstanding') }}
                   </app-badge>
                 </td>
               </tr>
@@ -152,12 +155,15 @@
 
       <app-pagination
         [page]="page()"
-        [pageSize]="pageSize"
+        [pageSize]="pageSize()"
         [total]="total()"
         (pageChange)="goToPage($event)"
+        (pageSizeChange)="setPageSize($event)"
       />
     }
   </section>
 
-  <p class="text-xs text-slate-400">Period: {{ periodLabel() }}</p>
+  <p class="text-[11px] text-slate-400">
+    {{ t('statement.periodLine', { range: periodLabel() }) }}
+  </p>
 </div>

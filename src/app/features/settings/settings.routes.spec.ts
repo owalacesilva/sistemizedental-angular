@@ -33,8 +33,9 @@ const SETTINGS: ClinicSettings = {
 };
 
 /**
- * The section is a shell with lazy children, so the wiring — redirect, side rail,
- * child render — is only exercised by going through the router.
+ * The section is a shell with lazy children, so the wiring — redirect, header,
+ * child render — is only exercised by going through the router. The side rail has
+ * moved into the sidebar, so the shell's job is now the heading.
  */
 async function navigate(path: string): Promise<HTMLElement> {
   TestBed.configureTestingModule({
@@ -61,7 +62,7 @@ describe('settingsRoutes', () => {
 
     expect(element.textContent).toContain('Clinic profile');
     expect(element.querySelector<HTMLInputElement>('#displayName')?.value).toBe('Clínica Modelo');
-    expect(element.querySelector('[aria-current="page"]')?.textContent).toContain('Clinic profile');
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Clinic profile');
   });
 
   it('renders the address tab', async () => {
@@ -69,7 +70,7 @@ describe('settingsRoutes', () => {
 
     expect(element.textContent).toContain('Clinic address');
     expect(element.querySelector<HTMLInputElement>('#street')?.value).toBe('Avenida Paulista');
-    expect(element.querySelector('[aria-current="page"]')?.textContent).toContain('Address');
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Address');
   });
 
   it('renders the security tab with the signed-in account', async () => {

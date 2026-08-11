@@ -1,63 +1,46 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
+import { injectT } from '../../../core/i18n/translate';
+import { findNavChild } from '../../../layout/navigation';
+import { injectCurrentUrl } from '../../../shared/router/current-url';
 import { PageHeader } from '../../../shared/ui/page-header/page-header';
 
-interface SettingsTab {
-  readonly label: string;
-  readonly route: string;
-  readonly description: string;
-}
-
-const TABS: readonly SettingsTab[] = [
-  { label: 'Clinic profile', route: 'profile', description: 'Name, contact and public page' },
-  { label: 'Address', route: 'address', description: 'Where patients find you' },
-  { label: 'Security', route: 'security', description: 'Account password' },
-];
-
-/** Section shell: a side rail on wide screens, stacked tabs on narrow ones. */
+/**
+ * Section shell. The side rail that used to sit here has moved into the sidebar,
+ * so the form gets the full width and the sub-navigation stays reachable from
+ * anywhere in the app.
+ */
 @Component({
   selector: 'app-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, PageHeader],
+  imports: [RouterOutlet, PageHeader],
   template: `
-    <div class="mx-auto max-w-5xl space-y-6">
+    <div class="mx-auto w-full max-w-3xl space-y-4">
       <app-page-header
-        heading="Settings"
-        description="How the clinic presents itself and who can sign in."
+        [eyebrow]="t('settings.title')"
+        [heading]="heading()"
+        [description]="description()"
       />
 
-      <div class="grid gap-6 lg:grid-cols-[15rem_1fr]">
-        <nav class="app-card h-fit p-1.5" aria-label="Settings sections">
-          @for (tab of tabs; track tab.route) {
-            <a
-              class="block rounded-lg px-3.5 py-2.5 transition hover:bg-slate-50"
-              [routerLink]="tab.route"
-              routerLinkActive="bg-brand-600 hover:bg-brand-600"
-              #link="routerLinkActive"
-              [attr.aria-current]="link.isActive ? 'page' : null"
-            >
-              <span
-                class="block text-sm font-semibold"
-                [class]="link.isActive ? 'text-white' : 'text-slate-700'"
-              >
-                {{ tab.label }}
-              </span>
-              <span
-                class="block text-xs"
-                [class]="link.isActive ? 'text-brand-100' : 'text-slate-400'"
-              >
-                {{ tab.description }}
-              </span>
-            </a>
-          }
-        </nav>
-
-        <router-outlet />
-      </div>
+      <router-outlet />
     </div>
   `,
 })
 export class Settings {
-  protected readonly tabs = TABS;
+  private readonly url = injectCurrentUrl();
+
+  protected readonly t = injectT();
+
+  private readonly child = computed(() => findNavChild(this.url()));
+
+  protected readonly heading = computed(() => {
+    const child = this.child();
+    return child ? this.t(child.labelKey) : this.t('settings.title');
+  });
+
+  protected readonly description = computed(() => {
+    const child = this.child();
+    return child ? this.t(child.descriptionKey) : this.t('settings.subtitle');
+  });
 }

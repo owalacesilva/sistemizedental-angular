@@ -1,77 +1,76 @@
-<app-auth-layout
-  heading="Create your account"
-  subheading="Set up your clinic in a couple of minutes. No card required."
->
+<app-auth-layout [heading]="t('auth.signUp.heading')" [subheading]="t('auth.signUp.subheading')">
   <form class="space-y-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     @if (errorMessage(); as message) {
       <app-alert tone="error">{{ message }}</app-alert>
     }
 
     <div>
-      <label class="app-label" for="clinicName">Clinic name</label>
+      <label class="app-label" for="clinicName">{{ t('field.clinicName') }}</label>
       <input
         id="clinicName"
         type="text"
-        class="app-input"
+        class="app-input py-2.5"
         [class.app-input-invalid]="
           form.controls.clinicName.touched && form.controls.clinicName.invalid
         "
         formControlName="clinicName"
         autocomplete="organization"
-        placeholder="Bright Smile Dental"
+        [placeholder]="t('auth.signUp.clinicPlaceholder')"
       />
-      <app-field-error [control]="form.controls.clinicName" label="Clinic name" />
+      <app-field-error [control]="form.controls.clinicName" [label]="t('field.clinicName')" />
     </div>
 
     <div>
-      <label class="app-label" for="displayName">Your name</label>
+      <label class="app-label" for="displayName">{{ t('field.yourName') }}</label>
       <input
         id="displayName"
         type="text"
-        class="app-input"
+        class="app-input py-2.5"
         [class.app-input-invalid]="
           form.controls.displayName.touched && form.controls.displayName.invalid
         "
         formControlName="displayName"
         autocomplete="name"
-        placeholder="Dr. Alex Moreira"
+        [placeholder]="t('auth.signUp.namePlaceholder')"
       />
-      <app-field-error [control]="form.controls.displayName" label="Your name" />
+      <app-field-error [control]="form.controls.displayName" [label]="t('field.yourName')" />
     </div>
 
     <div>
-      <label class="app-label" for="signupEmail">Work email</label>
+      <label class="app-label" for="signupEmail">{{ t('field.workEmail') }}</label>
       <input
         id="signupEmail"
         type="email"
-        class="app-input"
+        class="app-input py-2.5"
         [class.app-input-invalid]="form.controls.email.touched && form.controls.email.invalid"
         formControlName="email"
         autocomplete="email"
-        placeholder="you@clinic.com"
+        [placeholder]="t('auth.login.emailPlaceholder')"
       />
-      <app-field-error [control]="form.controls.email" label="Work email" />
+      <app-field-error [control]="form.controls.email" [label]="t('field.workEmail')" />
     </div>
 
     <div>
-      <label class="app-label" for="signupPassword">Password</label>
+      <label class="app-label" for="signupPassword">{{ t('field.password') }}</label>
       <div class="relative">
         <input
           id="signupPassword"
-          class="app-input pr-11"
+          class="app-input py-2.5 pr-11"
           [class.app-input-invalid]="
             form.controls.password.touched && form.controls.password.invalid
           "
           [type]="passwordVisible() ? 'text' : 'password'"
           formControlName="password"
           autocomplete="new-password"
-          placeholder="At least 8 characters"
+          [placeholder]="t('auth.signUp.passwordPlaceholder')"
         />
         <button
           type="button"
           class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 transition hover:text-slate-600"
           (click)="togglePasswordVisibility()"
-          [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'"
+          [attr.aria-label]="
+            passwordVisible() ? t('auth.login.hidePassword') : t('auth.login.showPassword')
+          "
           [attr.aria-pressed]="passwordVisible()"
         >
           <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -112,23 +111,26 @@
         </div>
       </div>
 
-      <app-field-error [control]="form.controls.password" label="Password" />
+      <app-field-error [control]="form.controls.password" [label]="t('field.password')" />
     </div>
 
     <div>
-      <label class="app-label" for="confirmPassword">Confirm password</label>
+      <label class="app-label" for="confirmPassword">{{ t('field.confirmPassword') }}</label>
       <input
         id="confirmPassword"
         [type]="passwordVisible() ? 'text' : 'password'"
-        class="app-input"
+        class="app-input py-2.5"
         [class.app-input-invalid]="
           form.controls.confirmPassword.touched && form.controls.confirmPassword.invalid
         "
         formControlName="confirmPassword"
         autocomplete="new-password"
-        placeholder="Repeat your password"
+        [placeholder]="t('auth.signUp.confirmPlaceholder')"
       />
-      <app-field-error [control]="form.controls.confirmPassword" label="Confirm password" />
+      <app-field-error
+        [control]="form.controls.confirmPassword"
+        [label]="t('field.confirmPassword')"
+      />
     </div>
 
     <div>
@@ -140,23 +142,23 @@
           formControlName="acceptTerms"
         />
         <span>
-          I agree to the
+          {{ t('auth.signUp.termsPrefix') }}
           <a
             class="text-brand-600 font-medium hover:underline"
             routerLink="/sign-up"
             fragment="terms"
-            >Terms of Service</a
+            >{{ t('auth.signUp.termsLink') }}</a
           >
-          and
+          {{ t('auth.signUp.termsAnd') }}
           <a
             class="text-brand-600 font-medium hover:underline"
             routerLink="/sign-up"
             fragment="privacy"
-            >Privacy Policy</a
+            >{{ t('auth.signUp.privacyLink') }}</a
           >.
         </span>
       </label>
-      <app-field-error [control]="form.controls.acceptTerms" label="Terms" />
+      <app-field-error [control]="form.controls.acceptTerms" [label]="t('field.terms')" />
     </div>
 
     <button
@@ -166,19 +168,19 @@
     >
       @if (submitting()) {
         <app-spinner />
-        Creating account…
+        {{ t('auth.signUp.submitting') }}
       } @else {
-        Create account
+        {{ t('auth.signUp.submit') }}
       }
     </button>
 
     <p class="text-center text-sm text-slate-500">
-      Already have an account?
+      {{ t('auth.signUp.haveAccount') }}
       <a
         class="text-brand-600 hover:text-brand-700 font-semibold hover:underline"
         routerLink="/login"
       >
-        Sign in
+        {{ t('auth.signUp.signIn') }}
       </a>
     </p>
   </form>

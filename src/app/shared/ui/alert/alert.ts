@@ -13,12 +13,12 @@ const TONE_CLASSES: Record<AlertTone, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm"
+      class="flex items-start gap-2 rounded-lg border px-3 py-2 text-xs leading-relaxed"
       [class]="toneClass()"
       [attr.role]="tone() === 'error' ? 'alert' : 'status'"
     >
       <svg
-        class="mt-0.5 h-4 w-4 shrink-0"
+        class="mt-px h-3.5 w-3.5 shrink-0"
         viewBox="0 0 20 20"
         fill="currentColor"
         aria-hidden="true"

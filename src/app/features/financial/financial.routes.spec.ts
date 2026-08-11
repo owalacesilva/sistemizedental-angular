@@ -15,8 +15,10 @@ const EMPTY_STATEMENT = {
 };
 
 /**
- * The section is a shell with lazy children, so the wiring — redirect, tab bar,
- * child render — is only exercised by going through the router.
+ * The section is a shell with lazy children, so the wiring — redirect, header,
+ * child render — is only exercised by going through the router. The sub-navigation
+ * itself now lives in the sidebar, so what the shell owes each child is the
+ * eyebrow-plus-heading that says where you are.
  */
 async function navigate(path: string): Promise<HTMLElement> {
   TestBed.configureTestingModule({
@@ -26,6 +28,13 @@ async function navigate(path: string): Promise<HTMLElement> {
         provide: FinancialService,
         useValue: {
           loadStatement: () => of(EMPTY_STATEMENT),
+          loadTransactions: () =>
+            of({
+              rows: [],
+              total: 0,
+              totals: { inflow: 0, outflow: 0, net: 0, unsettled: 0 },
+              isDemoData: false,
+            }),
           loadPayables: () =>
             of({ rows: [], total: 0, outstanding: 0, overdue: 0, isDemoData: false }),
           loadPaymentMethods: () => of({ rows: [], isDemoData: false }),
@@ -42,29 +51,32 @@ async function navigate(path: string): Promise<HTMLElement> {
 describe('financialRoutes', () => {
   beforeEach(() => TestBed.resetTestingModule());
 
-  it('lands on the statement and marks its tab current', async () => {
+  it('lands on the statement and titles itself after it', async () => {
     const element = await navigate('/');
 
     expect(element.textContent).toContain('Financial');
     expect(element.textContent).toContain('No movements in this period');
-    expect(element.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe('Statement');
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Statement');
   });
 
-  it('renders the bills tab', async () => {
+  it('renders the ledger', async () => {
+    const element = await navigate('/transactions');
+
+    expect(element.textContent).toContain('No transactions match these filters');
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Transactions');
+  });
+
+  it('renders the bills', async () => {
     const element = await navigate('/payables');
 
     expect(element.textContent).toContain('Nothing to pay');
-    expect(element.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe(
-      'Bills to pay',
-    );
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Bills to pay');
   });
 
-  it('renders the payment methods tab', async () => {
+  it('renders the payment methods', async () => {
     const element = await navigate('/payment-methods');
 
     expect(element.textContent).toContain('No payment methods configured');
-    expect(element.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe(
-      'Payment methods',
-    );
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Payment methods');
   });
 });

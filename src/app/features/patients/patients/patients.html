@@ -1,8 +1,8 @@
-<div class="mx-auto max-w-7xl space-y-6">
-  <app-page-header heading="Patients" description="Everyone who has ever booked with the clinic.">
+<div class="app-page">
+  <app-page-header [heading]="t('patients.title')" [description]="t('patients.subtitle')">
     <button
       type="button"
-      class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-60"
+      class="app-btn app-btn-quiet"
       (click)="reload()"
       [disabled]="result.isLoading()"
     >
@@ -24,14 +24,14 @@
           />
         </svg>
       }
-      Refresh
+      {{ t('common.refresh') }}
     </button>
 
     <button
       type="button"
-      class="bg-brand-600 flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+      class="app-btn app-btn-primary"
       disabled
-      title="The patient record form is still being ported from the legacy app."
+      [attr.title]="t('patients.newDisabled')"
     >
       <svg
         class="h-4 w-4"
@@ -43,7 +43,7 @@
       >
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg>
-      New patient
+      {{ t('patients.new') }}
     </button>
   </app-page-header>
 
@@ -52,16 +52,21 @@
   }
 
   @if (isDemoData()) {
-    <app-alert tone="info">
-      Showing sample records — the API at <code class="font-mono">/api</code> is not reachable, so
-      the demo backend is filling in.
-    </app-alert>
+    <app-alert tone="info">{{ t('demo.patients') }}</app-alert>
   }
 
-  <section class="app-card overflow-hidden" aria-label="Patient list">
-    <!-- Filters -->
-    <div class="flex flex-wrap items-center gap-3 border-b border-slate-200/70 px-5 py-4">
-      <div class="relative min-w-0 flex-1 sm:max-w-xs">
+  <app-filter-panel
+    panelKey="patients"
+    [activeCount]="activeFilterCount()"
+    (clear)="resetFilters()"
+  >
+    <span panelActions class="text-xs font-medium text-slate-400">
+      {{ plural('patients.count', total()) }}
+    </span>
+
+    <label class="min-w-0 flex-1 sm:max-w-xs">
+      <span class="app-label">{{ t('patients.searchLabel') }}</span>
+      <span class="relative block">
         <svg
           class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
           fill="none"
@@ -80,89 +85,82 @@
           type="search"
           class="app-input pl-9"
           [formControl]="searchControl"
-          placeholder="Search patients…"
-          aria-label="Search patients"
+          [placeholder]="t('patients.searchPlaceholder')"
         />
-      </div>
+      </span>
+    </label>
 
-      <label class="flex items-center gap-2 text-xs font-medium text-slate-500">
-        Search by
-        <select
-          class="app-input w-auto py-2 text-sm"
-          [value]="field()"
-          (change)="selectField($any($event.target).value)"
-          aria-label="Field to search"
-        >
-          @for (option of searchFields; track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
-          }
-        </select>
-      </label>
+    <label>
+      <span class="app-label">{{ t('patients.searchBy') }}</span>
+      <select
+        class="app-input w-auto"
+        [value]="field()"
+        (change)="selectField($any($event.target).value)"
+        [attr.aria-label]="t('patients.searchField')"
+      >
+        @for (option of searchFields; track option.value) {
+          <option [value]="option.value">{{ t(option.labelKey) }}</option>
+        }
+      </select>
+    </label>
+  </app-filter-panel>
 
-      <p class="ml-auto text-xs font-medium text-slate-400">
-        {{ total() }} {{ total() === 1 ? 'patient' : 'patients' }}
-      </p>
-    </div>
-
+  <section class="app-card overflow-hidden" [attr.aria-label]="t('patients.listLabel')">
     @if (result.isLoading() && !rows().length) {
-      <div class="flex items-center gap-2 px-5 py-12 text-sm text-slate-500">
+      <div class="flex items-center gap-2 px-4 py-10 text-sm text-slate-500">
         <app-spinner />
-        Loading patients…
+        {{ t('patients.loading') }}
       </div>
     } @else if (!rows().length) {
       <app-empty-state
-        [heading]="hasSearch() ? 'No patients match that search' : 'No patients yet'"
-        [description]="
-          hasSearch()
-            ? 'Try a different term, or search by phone or email instead.'
-            : 'Patients appear here as soon as they book their first appointment.'
-        "
+        [heading]="hasSearch() ? t('patients.emptySearch') : t('patients.empty')"
+        [description]="hasSearch() ? t('patients.emptySearchHint') : t('patients.emptyHint')"
         icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
       >
         @if (hasSearch()) {
-          <button
-            type="button"
-            class="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-            (click)="clearSearch()"
-          >
-            Clear search
+          <button type="button" class="app-btn app-btn-quiet" (click)="clearSearch()">
+            {{ t('common.clearSearch') }}
           </button>
         }
       </app-empty-state>
     } @else {
       <div class="overflow-x-auto">
-        <table class="w-full min-w-[44rem] text-left text-sm">
-          <thead class="bg-slate-50/70 text-xs tracking-wide text-slate-500 uppercase">
+        <table class="app-table min-w-[44rem]">
+          <thead>
             <tr>
-              <th scope="col" class="px-5 py-3 font-semibold">Patient</th>
-              <th scope="col" class="px-5 py-3 font-semibold">Region</th>
-              <th scope="col" class="px-5 py-3 font-semibold">Birthday</th>
-              <th scope="col" class="px-5 py-3 font-semibold">Last visit</th>
-              <th scope="col" class="px-5 py-3 font-semibold">Status</th>
+              <th scope="col">{{ t('patients.column.patient') }}</th>
+              <th scope="col">{{ t('patients.column.region') }}</th>
+              <th scope="col">{{ t('patients.column.birthday') }}</th>
+              <th scope="col">{{ t('patients.column.lastVisit') }}</th>
+              <th scope="col">{{ t('patients.column.status') }}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100">
+          <tbody>
             @for (patient of rows(); track patient.id) {
-              <tr class="transition hover:bg-slate-50/70">
-                <td class="px-5 py-3.5">
-                  <div class="flex items-center gap-3">
-                    <app-avatar [name]="patient.name" />
+              <tr>
+                <td>
+                  <div class="flex items-center gap-2.5">
+                    <app-avatar [name]="patient.name" sizeClass="h-8 w-8 text-[11px]" />
                     <div class="min-w-0">
-                      <p class="truncate font-semibold text-slate-800">{{ patient.name }}</p>
-                      <p class="truncate text-xs text-slate-500">
-                        {{ patient.phone ?? patient.email ?? 'No contact on file' }}
+                      <p class="truncate font-medium text-slate-800">{{ patient.name }}</p>
+                      <p class="truncate text-[11px] text-slate-500">
+                        {{ patient.phone ?? patient.email ?? t('patients.noContact') }}
                       </p>
                     </div>
                   </div>
                 </td>
-                <td class="px-5 py-3.5 text-slate-600">{{ region(patient) }}</td>
-                <td class="px-5 py-3.5 text-slate-600">
-                  {{ patient.birthDate ? (patient.birthDate | date: 'd MMM') : '—' }}
+                <td class="text-slate-600">{{ region(patient) }}</td>
+                <td class="text-slate-600">
+                  {{
+                    patient.birthDate
+                      ? (patient.birthDate | date: 'd MMM' : undefined : locale())
+                      : '—'
+                  }}
                 </td>
-                <td class="px-5 py-3.5 text-slate-500">{{ relativeDay(patient.lastVisit) }}</td>
-                <td class="px-5 py-3.5">
+                <td class="text-slate-500">{{ relativeDay(patient.lastVisit) }}</td>
+                <td>
                   <app-badge [tone]="patient.active ? 'success' : 'neutral'">
-                    {{ patient.active ? 'Active' : 'Inactive' }}
+                    {{ patient.active ? t('common.active') : t('common.inactive') }}
                   </app-badge>
                 </td>
               </tr>
@@ -173,9 +171,10 @@
 
       <app-pagination
         [page]="page()"
-        [pageSize]="pageSize"
+        [pageSize]="pageSize()"
         [total]="total()"
         (pageChange)="goToPage($event)"
+        (pageSizeChange)="setPageSize($event)"
       />
     }
   </section>

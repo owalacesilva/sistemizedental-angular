@@ -3,6 +3,8 @@ export * from './avatar/avatar';
 export * from './badge/badge';
 export * from './empty-state/empty-state';
 export * from './field-error/field-error';
+export * from './filter-panel/filter-panel';
+export * from './locale-switcher/locale-switcher';
 export * from './logo/logo';
 export * from './page-header/page-header';
 export * from './pagination/pagination';

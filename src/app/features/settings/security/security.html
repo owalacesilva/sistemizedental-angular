@@ -1,24 +1,27 @@
-<div class="space-y-4">
+<div class="space-y-3">
   @if (errorMessage(); as message) {
     <app-alert tone="error">{{ message }}</app-alert>
   }
 
   @if (saved()) {
-    <app-alert tone="success">Password updated. Use it the next time you sign in.</app-alert>
+    <app-alert tone="success">{{ t('settings.security.saved') }}</app-alert>
   }
 
-  <form class="app-card p-5 sm:p-6" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-    <fieldset class="space-y-5">
-      <legend class="text-brand-900 text-base font-semibold">Change password</legend>
+  <form class="app-card p-4 sm:p-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <fieldset class="space-y-4">
+      <legend class="text-brand-900 text-sm font-semibold">
+        {{ t('settings.security.legend') }}
+      </legend>
 
-      <p class="text-sm text-slate-500">
-        Signed in as
-        <span class="font-medium text-slate-700">{{ account()?.email ?? 'this account' }}</span
+      <p class="text-xs text-slate-500">
+        {{ t('settings.security.signedInAs') }}
+        <span class="font-medium text-slate-700">
+          {{ account()?.email ?? t('settings.security.thisAccount') }}</span
         >.
       </p>
 
       <div>
-        <label class="app-label" for="currentPassword">Current password</label>
+        <label class="app-label" for="currentPassword">{{ t('field.currentPassword') }}</label>
         <input
           id="currentPassword"
           type="password"
@@ -29,12 +32,15 @@
           formControlName="currentPassword"
           autocomplete="current-password"
         />
-        <app-field-error [control]="form.controls.currentPassword" label="Current password" />
+        <app-field-error
+          [control]="form.controls.currentPassword"
+          [label]="t('field.currentPassword')"
+        />
       </div>
 
-      <div class="grid gap-5 sm:grid-cols-2">
+      <div class="grid gap-4 sm:grid-cols-2">
         <div>
-          <label class="app-label" for="newPassword">New password</label>
+          <label class="app-label" for="newPassword">{{ t('field.newPassword') }}</label>
           <input
             id="newPassword"
             type="password"
@@ -45,12 +51,14 @@
             formControlName="newPassword"
             autocomplete="new-password"
           />
-          <p class="mt-1.5 text-xs text-slate-400">At least {{ minLength }} characters.</p>
-          <app-field-error [control]="form.controls.newPassword" label="New password" />
+          <p class="mt-1 text-[11px] text-slate-400">
+            {{ t('settings.security.minLength', { count: minLength }) }}
+          </p>
+          <app-field-error [control]="form.controls.newPassword" [label]="t('field.newPassword')" />
         </div>
 
         <div>
-          <label class="app-label" for="confirmPassword">Confirm new password</label>
+          <label class="app-label" for="confirmPassword">{{ t('field.confirmPassword') }}</label>
           <input
             id="confirmPassword"
             type="password"
@@ -61,21 +69,20 @@
             formControlName="confirmPassword"
             autocomplete="new-password"
           />
-          <app-field-error [control]="form.controls.confirmPassword" label="Confirmation" />
+          <app-field-error
+            [control]="form.controls.confirmPassword"
+            [label]="t('field.confirmation')"
+          />
         </div>
       </div>
     </fieldset>
 
-    <div class="mt-6 flex items-center gap-3 border-t border-slate-200/70 pt-5">
-      <button
-        type="submit"
-        class="bg-brand-600 hover:bg-brand-700 flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition disabled:opacity-60"
-        [disabled]="saving()"
-      >
+    <div class="mt-5 flex items-center gap-2.5 border-t border-slate-200/70 pt-4">
+      <button type="submit" class="app-btn app-btn-primary" [disabled]="saving()">
         @if (saving()) {
           <app-spinner />
         }
-        Update password
+        {{ t('settings.security.save') }}
       </button>
     </div>
   </form>

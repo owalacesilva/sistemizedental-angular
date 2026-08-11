@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 
+import { injectLocale, injectT } from '../../../core/i18n/translate';
+import type { MessageKey } from '../../../core/i18n/messages.en';
 import { addDays, isToday, startOfDay, toIsoDate } from '../../../shared/format/dates';
 import { Alert } from '../../../shared/ui/alert/alert';
 import { Badge, type BadgeTone } from '../../../shared/ui/badge/badge';
+import { FilterPanel } from '../../../shared/ui/filter-panel/filter-panel';
 import { PageHeader } from '../../../shared/ui/page-header/page-header';
 import { Spinner } from '../../../shared/ui/spinner/spinner';
 import { eachDay, minutesSinceMidnight, startOfWeek } from '../calendar.dates';
@@ -21,13 +24,13 @@ const DAY_END_HOUR = 20;
 const HOUR_HEIGHT = 56;
 const MIN_BLOCK_HEIGHT = 22;
 
-const STATUS_LABELS: Record<ScheduleStatus, string> = {
-  created: 'Scheduled',
-  confirmed: 'Confirmed',
-  arrived: 'Arrived',
-  finished: 'Finished',
-  missed: 'No-show',
-  canceled: 'Canceled',
+const STATUS_LABELS: Record<ScheduleStatus, MessageKey> = {
+  created: 'calendar.status.created',
+  confirmed: 'calendar.status.confirmed',
+  arrived: 'calendar.status.arrived',
+  finished: 'calendar.status.finished',
+  missed: 'calendar.status.missed',
+  canceled: 'calendar.status.canceled',
 };
 
 const STATUS_BLOCKS: Record<ScheduleStatus, string> = {
@@ -68,11 +71,14 @@ interface DayColumn {
 @Component({
   selector: 'app-calendar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeader, Alert, Badge, Spinner],
+  imports: [PageHeader, Alert, Badge, FilterPanel, Spinner],
   templateUrl: './calendar.html',
 })
 export class Calendar {
   private readonly calendar = inject(CalendarService);
+
+  protected readonly t = injectT();
+  protected readonly locale = injectLocale();
 
   protected readonly hours = Array.from(
     { length: DAY_END_HOUR - DAY_START_HOUR },
@@ -110,7 +116,7 @@ export class Calendar {
 
   protected readonly errorMessage = computed(() => {
     const error = this.schedule.error();
-    return error instanceof Error ? error.message : error ? 'Could not load the agenda.' : null;
+    return error instanceof Error ? error.message : error ? this.t('calendar.error') : null;
   });
 
   /** Doctor filtering is client-side: the whole window is already in memory. */
@@ -129,8 +135,8 @@ export class Calendar {
 
       return {
         iso,
-        weekday: date.toLocaleDateString(undefined, { weekday: 'short' }),
-        dayNumber: date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }),
+        weekday: date.toLocaleDateString(this.locale(), { weekday: 'short' }),
+        dayNumber: date.toLocaleDateString(this.locale(), { day: 'numeric', month: 'short' }),
         today: isToday(date),
         blocks: layOut(events.filter((event) => fallsOn(event.startsAt, iso))),
       };
@@ -141,7 +147,7 @@ export class Calendar {
     const { start, end } = this.range();
 
     if (this.view() === 'day') {
-      return this.anchor().toLocaleDateString(undefined, {
+      return this.anchor().toLocaleDateString(this.locale(), {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -153,10 +159,11 @@ export class Calendar {
     const last = new Date(`${end}T00:00:00`);
     const sameMonth = first.getMonth() === last.getMonth();
 
-    return `${first.toLocaleDateString(undefined, {
+    const locale = this.locale();
+    return `${first.toLocaleDateString(locale, {
       day: 'numeric',
       ...(sameMonth ? {} : { month: 'short' }),
-    })} – ${last.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    })} – ${last.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
   });
 
   protected readonly counts = computed(() => {
@@ -171,6 +178,8 @@ export class Calendar {
   });
 
   protected readonly gridHeight = HOUR_HEIGHT * (DAY_END_HOUR - DAY_START_HOUR);
+
+  protected readonly activeFilterCount = computed(() => (this.doctorId() === null ? 0 : 1));
 
   protected setView(view: CalendarView): void {
     this.view.set(view);
@@ -193,11 +202,18 @@ export class Calendar {
   }
 
   protected time(iso: string): string {
-    return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleTimeString(this.locale(), {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   protected statusLabel(status: ScheduleStatus): string {
-    return STATUS_LABELS[status];
+    return this.t(STATUS_LABELS[status]);
+  }
+
+  protected clearFilters(): void {
+    this.doctorId.set(null);
   }
 
   protected blockClass(status: ScheduleStatus): string {

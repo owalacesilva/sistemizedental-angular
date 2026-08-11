@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { injectT } from '../../../core/i18n/translate';
 import { matchesControl } from '../../../shared/forms/validators';
 import { Alert } from '../../../shared/ui/alert/alert';
 import { FieldError } from '../../../shared/ui/field-error/field-error';
@@ -22,6 +23,7 @@ export class Security {
   private readonly settings = inject(SettingsService);
   private readonly auth = inject(AuthService);
 
+  protected readonly t = injectT();
   protected readonly minLength = MIN_PASSWORD_LENGTH;
   protected readonly account = this.auth.account;
 

@@ -17,15 +17,12 @@
 
       <div class="max-w-md">
         <h2 class="text-3xl font-semibold tracking-tight text-white xl:text-4xl">
-          Everything your clinic runs on, in one place.
+          {{ t('auth.brand.headline') }}
         </h2>
-        <p class="text-brand-100 mt-4 text-base leading-relaxed">
-          Scheduling, patient records, treatment plans and billing — connected, so your team spends
-          less time on admin and more time on care.
-        </p>
+        <p class="text-brand-100 mt-4 text-base leading-relaxed">{{ t('auth.brand.body') }}</p>
 
         <ul class="mt-10 space-y-4">
-          @for (feature of features; track feature) {
+          @for (feature of featureKeys; track feature) {
             <li class="text-brand-50 flex items-start gap-3 text-sm">
               <span
                 class="bg-brand-400/25 text-brand-100 mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
@@ -38,21 +35,24 @@
                   />
                 </svg>
               </span>
-              {{ feature }}
+              {{ t(feature) }}
             </li>
           }
         </ul>
       </div>
 
-      <p class="text-brand-200/80 text-xs">© {{ year }} Sistemize Dental. All rights reserved.</p>
+      <p class="text-brand-200/80 text-xs">{{ t('auth.brand.rights', { year: year }) }}</p>
     </div>
   </aside>
 
   <!-- Form panel -->
   <main class="flex flex-1 items-center justify-center px-5 py-10 sm:px-8">
     <div class="w-full max-w-md">
-      <div class="mb-8 lg:hidden">
-        <app-logo />
+      <div class="mb-8 flex items-center justify-between gap-4">
+        <span class="lg:invisible">
+          <app-logo />
+        </span>
+        <app-locale-switcher />
       </div>
 
       <header class="mb-7">

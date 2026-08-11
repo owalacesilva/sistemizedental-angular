@@ -27,6 +27,11 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.routes').then((m) => m.dashboardRoutes),
       },
       {
+        path: 'insights',
+        loadChildren: () =>
+          import('./features/insights/insights.routes').then((m) => m.insightsRoutes),
+      },
+      {
         path: 'calendar',
         loadChildren: () =>
           import('./features/calendar/calendar.routes').then((m) => m.calendarRoutes),

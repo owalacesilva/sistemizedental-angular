@@ -1,11 +1,8 @@
-<div class="mx-auto max-w-7xl space-y-6">
-  <app-page-header
-    heading="Doctors"
-    description="The clinical team and the days they see patients."
-  >
+<div class="app-page">
+  <app-page-header [heading]="t('doctors.title')" [description]="t('doctors.subtitle')">
     <button
       type="button"
-      class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-60"
+      class="app-btn app-btn-quiet"
       (click)="reload()"
       [disabled]="result.isLoading()"
     >
@@ -27,14 +24,14 @@
           />
         </svg>
       }
-      Refresh
+      {{ t('common.refresh') }}
     </button>
 
     <button
       type="button"
-      class="bg-brand-600 flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+      class="app-btn app-btn-primary"
       disabled
-      title="The doctor record form is still being ported from the legacy app."
+      [attr.title]="t('doctors.newDisabled')"
     >
       <svg
         class="h-4 w-4"
@@ -46,7 +43,7 @@
       >
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg>
-      Add doctor
+      {{ t('doctors.new') }}
     </button>
   </app-page-header>
 
@@ -55,124 +52,121 @@
   }
 
   @if (isDemoData()) {
-    <app-alert tone="info">
-      Showing a sample team — the API at <code class="font-mono">/api</code> is not reachable, so
-      the demo backend is filling in.
-    </app-alert>
+    <app-alert tone="info">{{ t('demo.doctors') }}</app-alert>
   }
 
-  <!-- Filters -->
-  <div class="app-card flex flex-wrap items-center gap-3 px-4 py-3">
-    <div class="flex items-center rounded-lg border border-slate-200 p-0.5">
-      @for (option of filters; track option.value) {
-        <button
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm font-medium transition"
-          [class]="
-            filter() === option.value
-              ? 'bg-brand-600 text-white'
-              : 'text-slate-600 hover:bg-slate-50'
-          "
-          (click)="setFilter(option.value)"
-        >
-          {{ option.label }}
-        </button>
-      }
-    </div>
-
-    <div class="relative min-w-0 flex-1 sm:max-w-xs">
-      <svg
-        class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        stroke-width="2"
-        aria-hidden="true"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"
-        />
-      </svg>
-      <input
-        type="search"
-        class="app-input pl-9"
-        [formControl]="searchControl"
-        placeholder="Search by name, email or phone…"
-        aria-label="Search doctors"
-      />
-    </div>
-
-    <div class="ml-auto flex items-center gap-1.5">
-      <app-badge tone="info">{{ counts().total }} on the team</app-badge>
-      <app-badge tone="success">{{ counts().active }} active</app-badge>
+  <app-filter-panel panelKey="doctors" [activeCount]="activeFilterCount()" (clear)="resetFilters()">
+    <div panelActions class="flex items-center gap-1">
+      <app-badge tone="info">{{ plural('doctors.count', counts().total) }}</app-badge>
+      <app-badge tone="success">{{
+        t('doctors.activeCount', { count: counts().active })
+      }}</app-badge>
       @if (counts().blocked) {
-        <app-badge tone="danger">{{ counts().blocked }} blocked</app-badge>
+        <app-badge tone="danger">
+          {{ t('doctors.blockedCount', { count: counts().blocked }) }}
+        </app-badge>
       }
     </div>
-  </div>
+
+    <div>
+      <span class="app-label">{{ t('patients.column.status') }}</span>
+      <div class="app-segment">
+        @for (option of filters; track option.value) {
+          <button
+            type="button"
+            class="app-chip"
+            [class]="filter() === option.value ? 'app-chip-on' : 'app-chip-off'"
+            [attr.aria-pressed]="filter() === option.value"
+            (click)="setFilter(option.value)"
+          >
+            {{ t(option.labelKey) }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <label class="min-w-0 flex-1 sm:max-w-xs">
+      <span class="app-label">{{ t('doctors.searchLabel') }}</span>
+      <span class="relative block">
+        <svg
+          class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"
+          />
+        </svg>
+        <input
+          type="search"
+          class="app-input pl-9"
+          [formControl]="searchControl"
+          [placeholder]="t('doctors.searchPlaceholder')"
+        />
+      </span>
+    </label>
+  </app-filter-panel>
 
   @if (result.isLoading() && !all().length) {
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-hidden="true">
+    <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-hidden="true">
       @for (placeholder of [1, 2, 3]; track placeholder) {
-        <div class="app-card animate-pulse p-5">
-          <div class="flex items-center gap-3">
-            <div class="h-12 w-12 rounded-full bg-slate-200"></div>
+        <div class="app-card animate-pulse p-4">
+          <div class="flex items-center gap-2.5">
+            <div class="h-10 w-10 rounded-full bg-slate-200"></div>
             <div class="flex-1">
-              <div class="h-4 w-32 rounded bg-slate-200"></div>
-              <div class="mt-2 h-3 w-24 rounded bg-slate-100"></div>
+              <div class="h-3.5 w-32 rounded bg-slate-200"></div>
+              <div class="mt-2 h-2.5 w-24 rounded bg-slate-100"></div>
             </div>
           </div>
-          <div class="mt-5 h-3 w-full rounded bg-slate-100"></div>
-          <div class="mt-2 h-3 w-2/3 rounded bg-slate-100"></div>
+          <div class="mt-4 h-2.5 w-full rounded bg-slate-100"></div>
+          <div class="mt-2 h-2.5 w-2/3 rounded bg-slate-100"></div>
         </div>
       }
     </section>
   } @else if (!rows().length) {
     <div class="app-card">
       <app-empty-state
-        [heading]="hasSearch() ? 'No doctors match that search' : 'No doctors to show'"
-        [description]="
-          hasSearch()
-            ? 'Try another name, or switch the status filter.'
-            : 'Doctors added to the clinic account appear here.'
-        "
+        [heading]="hasSearch() ? t('doctors.emptySearch') : t('doctors.empty')"
+        [description]="hasSearch() ? t('doctors.emptySearchHint') : t('doctors.emptyHint')"
         icon="M11 6.253v13m0-13C9.832 5.477 8.246 5 6.5 5S3.168 5.477 2 6.253v13C3.168 18.477 4.754 18 6.5 18s3.332.477 4.5 1.253m0-13C12.168 5.477 13.754 5 15.5 5s3.332.477 4.5 1.253v13C18.832 18.477 17.246 18 15.5 18s-3.332.477-4.5 1.253"
       >
         @if (hasSearch()) {
-          <button
-            type="button"
-            class="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-            (click)="clearSearch()"
-          >
-            Clear search
+          <button type="button" class="app-btn app-btn-quiet" (click)="clearSearch()">
+            {{ t('common.clearSearch') }}
           </button>
         }
       </app-empty-state>
     </div>
   } @else {
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Clinical team">
+    <section
+      class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+      [attr.aria-label]="t('doctors.listLabel')"
+    >
       @for (doctor of rows(); track doctor.id) {
-        <article class="app-card flex flex-col p-5">
-          <header class="flex items-start gap-3">
-            <app-avatar [name]="doctor.name" sizeClass="h-12 w-12 text-sm" />
+        <article class="app-card flex flex-col p-4">
+          <header class="flex items-start gap-2.5">
+            <app-avatar [name]="doctor.name" sizeClass="h-10 w-10 text-xs" />
             <div class="min-w-0 flex-1">
-              <h2 class="truncate font-semibold text-slate-800">{{ doctor.name }}</h2>
-              <p class="truncate text-xs text-slate-500">
-                {{ doctor.email ?? 'No email on file' }}
+              <h2 class="truncate text-sm font-semibold text-slate-800">{{ doctor.name }}</h2>
+              <p class="truncate text-[11px] text-slate-500">
+                {{ doctor.email ?? t('doctors.noEmail') }}
               </p>
             </div>
             <app-badge [tone]="doctor.blocked ? 'danger' : 'success'">
-              {{ doctor.blocked ? 'Blocked' : 'Active' }}
+              {{ doctor.blocked ? t('common.blocked') : t('common.active') }}
             </app-badge>
           </header>
 
-          <dl class="mt-4 space-y-2 text-sm">
+          <dl class="mt-3 space-y-1.5 text-xs">
             <div class="flex items-center gap-2">
-              <dt class="sr-only">Phone</dt>
+              <dt class="sr-only">{{ t('doctors.phone') }}</dt>
               <svg
-                class="h-4 w-4 shrink-0 text-slate-400"
+                class="h-3.5 w-3.5 shrink-0 text-slate-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -185,13 +179,13 @@
                   d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4a1 1 0 01-.5 1.21l-1.8.9a11 11 0 005.1 5.1l.9-1.8a1 1 0 011.2-.5l4 1.5a1 1 0 01.68.94V19a2 2 0 01-2 2h-1A16 16 0 013 6V5z"
                 />
               </svg>
-              <dd class="truncate text-slate-600">{{ doctor.phone ?? 'No phone on file' }}</dd>
+              <dd class="truncate text-slate-600">{{ doctor.phone ?? t('doctors.noPhone') }}</dd>
             </div>
 
             <div class="flex items-center gap-2">
-              <dt class="sr-only">Birthday</dt>
+              <dt class="sr-only">{{ t('doctors.birthday') }}</dt>
               <svg
-                class="h-4 w-4 shrink-0 text-slate-400"
+                class="h-3.5 w-3.5 shrink-0 text-slate-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -206,37 +200,47 @@
               </svg>
               <dd class="text-slate-600">
                 {{
-                  doctor.birthDate ? (doctor.birthDate | date: 'd MMMM') : 'Birthday not on file'
+                  doctor.birthDate
+                    ? (doctor.birthDate | date: 'd MMMM' : undefined : locale())
+                    : t('doctors.noBirthday')
                 }}
               </dd>
             </div>
           </dl>
 
-          <div class="mt-auto pt-5">
-            <p class="text-xs font-medium text-slate-400">Surgery days</p>
-            <div class="mt-2 flex gap-1.5">
-              @for (initial of weekdays; track $index) {
+          <div class="mt-auto pt-4">
+            <p class="text-[11px] font-medium text-slate-400">{{ t('doctors.surgeryDays') }}</p>
+            <div class="mt-1.5 flex gap-1">
+              @for (day of weekdays; track day) {
                 <span
-                  class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-semibold"
+                  class="inline-flex h-6 w-6 items-center justify-center rounded-md text-[11px] font-semibold"
                   [class]="
-                    worksOn(doctor, $index)
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-slate-100 text-slate-400'
+                    worksOn(doctor, day) ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-400'
                   "
-                  [attr.title]="
-                    weekdayName($index) + (worksOn(doctor, $index) ? ' — working' : ' — off')
-                  "
+                  [attr.title]="weekdayTitle(doctor, day)"
                 >
-                  {{ initial }}
+                  {{ weekdayInitial(day) }}
                 </span>
               }
             </div>
             @if (!doctor.workingDays.length) {
-              <p class="mt-2 text-xs text-slate-400">No working hours configured.</p>
+              <p class="mt-1.5 text-[11px] text-slate-400">{{ t('doctors.noWorkingDays') }}</p>
             }
           </div>
         </article>
       }
     </section>
+
+    <div class="app-card overflow-hidden">
+      <app-pagination
+        [page]="page()"
+        [pageSize]="pageSize()"
+        [total]="total()"
+        [pageSizes]="pageSizes"
+        [divided]="false"
+        (pageChange)="goToPage($event)"
+        (pageSizeChange)="setPageSize($event)"
+      />
+    </div>
   }
 </div>

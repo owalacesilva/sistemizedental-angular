@@ -5,7 +5,11 @@ import type {
   StatementQuery,
   TransactionKind,
   TransactionRecord,
+  TransactionSortColumn,
+  TransactionsPage,
+  TransactionsQuery,
 } from './financial.models';
+import { sumTransactions } from './financial.totals';
 
 function isoDaysFromToday(days: number): string {
   const date = new Date();
@@ -291,6 +295,49 @@ export function demoStatement(query: StatementQuery): StatementPage {
     summary: { income, expense, balance: income - expense, pending },
     isDemoData: true,
   };
+}
+
+/** Orders the sample ledger the way the API's `order` parameter would. */
+function compare(
+  a: TransactionRecord,
+  b: TransactionRecord,
+  column: TransactionSortColumn,
+): number {
+  switch (column) {
+    case 'total_amount':
+      return a.amount - b.amount;
+    case 'description':
+      return a.description.localeCompare(b.description);
+    case 'kind':
+      return a.kind.localeCompare(b.kind);
+    default:
+      return a.dueDate.localeCompare(b.dueDate);
+  }
+}
+
+/** Filters, sorts and pages the sample ledger the way the API would. */
+export function demoTransactions(query: TransactionsQuery): TransactionsPage {
+  const needle = query.search.trim().toLowerCase();
+
+  const matched = ENTRIES.map(toTransaction).filter((row) => {
+    if (row.dueDate < query.start || row.dueDate > query.end) {
+      return false;
+    }
+    if (query.kind !== null && row.kind !== query.kind) {
+      return false;
+    }
+    if (query.paid !== null && row.paid !== query.paid) {
+      return false;
+    }
+    return !needle || row.description.toLowerCase().includes(needle);
+  });
+
+  const direction = query.direction === 'asc' ? 1 : -1;
+  const sorted = [...matched].sort((a, b) => compare(a, b, query.sort) * direction);
+  const start = (Math.max(1, query.page) - 1) * query.pageSize;
+  const rows = sorted.slice(start, start + query.pageSize);
+
+  return { rows, total: sorted.length, totals: sumTransactions(rows), isDemoData: true };
 }
 
 /** Sample bills to pay, deliberately including two overdue ones. */

@@ -9,6 +9,7 @@ import {
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { injectT } from '../../../core/i18n/translate';
 import { Alert } from '../../../shared/ui/alert/alert';
 import { FieldError } from '../../../shared/ui/field-error/field-error';
 import { Spinner } from '../../../shared/ui/spinner/spinner';
@@ -33,6 +34,8 @@ const TIMEZONES = [
 export class Profile {
   private readonly fb = inject(FormBuilder);
   private readonly settings = inject(SettingsService);
+
+  protected readonly t = injectT();
 
   protected readonly timezones = TIMEZONES;
   protected readonly aboutMaxLength = ABOUT_MAX_LENGTH;
@@ -63,7 +66,7 @@ export class Profile {
 
   protected readonly loadError = computed(() => {
     const error = this.resource.error();
-    return error instanceof Error ? error.message : error ? 'Could not load the clinic.' : null;
+    return error instanceof Error ? error.message : error ? this.t('settings.profile.error') : null;
   });
 
   constructor() {

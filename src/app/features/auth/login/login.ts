@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth/auth.service';
+import { injectT } from '../../../core/i18n/translate';
 import { Alert } from '../../../shared/ui/alert/alert';
 import { FieldError } from '../../../shared/ui/field-error/field-error';
 import { Spinner } from '../../../shared/ui/spinner/spinner';
@@ -20,6 +21,7 @@ export class Login {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
+  protected readonly t = injectT();
   protected readonly demoCredentials = environment.demoCredentials;
 
   protected readonly form = this.fb.nonNullable.group({

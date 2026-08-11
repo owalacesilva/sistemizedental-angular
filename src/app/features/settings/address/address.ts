@@ -9,6 +9,7 @@ import {
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { injectT } from '../../../core/i18n/translate';
 import { Alert } from '../../../shared/ui/alert/alert';
 import { FieldError } from '../../../shared/ui/field-error/field-error';
 import { Spinner } from '../../../shared/ui/spinner/spinner';
@@ -57,6 +58,8 @@ export class Address {
   private readonly fb = inject(FormBuilder);
   private readonly settings = inject(SettingsService);
 
+  protected readonly t = injectT();
+
   protected readonly states = STATES;
 
   protected readonly form = this.fb.nonNullable.group({
@@ -84,7 +87,7 @@ export class Address {
 
   protected readonly loadError = computed(() => {
     const error = this.resource.error();
-    return error instanceof Error ? error.message : error ? 'Could not load the address.' : null;
+    return error instanceof Error ? error.message : error ? this.t('settings.address.error') : null;
   });
 
   constructor() {

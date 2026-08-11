@@ -14,6 +14,11 @@ export const financialRoutes: Routes = [
         loadComponent: () => import('./statement/statement').then((m) => m.Statement),
       },
       {
+        path: 'transactions',
+        title: 'Transactions · Financial · Sistemize Dental',
+        loadComponent: () => import('./transactions/transactions').then((m) => m.Transactions),
+      },
+      {
         path: 'payables',
         title: 'Bills to pay · Financial · Sistemize Dental',
         loadComponent: () => import('./payables/payables').then((m) => m.Payables),

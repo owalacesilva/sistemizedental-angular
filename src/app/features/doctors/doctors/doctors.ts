@@ -1,51 +1,73 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, map, startWith } from 'rxjs';
 
+import { injectLocale, injectPlural, injectT } from '../../../core/i18n/translate';
+import type { MessageKey } from '../../../core/i18n/messages.en';
+import { paginate } from '../../../shared/collections/paginate';
 import { Alert } from '../../../shared/ui/alert/alert';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import { Badge } from '../../../shared/ui/badge/badge';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { FilterPanel } from '../../../shared/ui/filter-panel/filter-panel';
 import { PageHeader } from '../../../shared/ui/page-header/page-header';
+import { Pagination } from '../../../shared/ui/pagination/pagination';
 import { Spinner } from '../../../shared/ui/spinner/spinner';
 import type { DoctorFilter, DoctorRecord, Weekday } from '../doctors.models';
 import { DoctorsService } from '../doctors.service';
 
 const SEARCH_DEBOUNCE_MS = 200;
+const DEFAULT_PAGE_SIZE = 12;
+const PAGE_SIZES: readonly number[] = [12, 24, 48];
 
 /** Sunday-first, so the index doubles as `Date.prototype.getDay()`. */
-const WEEKDAY_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const;
-const WEEKDAY_NAMES = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-] as const;
+const WEEKDAYS: readonly number[] = [0, 1, 2, 3, 4, 5, 6];
 
-const FILTERS: readonly { readonly value: DoctorFilter; readonly label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'active', label: 'Active' },
-  { value: 'blocked', label: 'Blocked' },
+const FILTERS: readonly { readonly value: DoctorFilter; readonly labelKey: MessageKey }[] = [
+  { value: 'all', labelKey: 'doctors.filter.all' },
+  { value: 'active', labelKey: 'doctors.filter.active' },
+  { value: 'blocked', labelKey: 'doctors.filter.blocked' },
 ];
 
 @Component({
   selector: 'app-doctors',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, ReactiveFormsModule, PageHeader, Alert, Avatar, Badge, EmptyState, Spinner],
+  imports: [
+    DatePipe,
+    ReactiveFormsModule,
+    PageHeader,
+    Alert,
+    Avatar,
+    Badge,
+    EmptyState,
+    FilterPanel,
+    Pagination,
+    Spinner,
+  ],
   templateUrl: './doctors.html',
 })
 export class Doctors {
   private readonly doctors = inject(DoctorsService);
 
+  protected readonly t = injectT();
+  protected readonly plural = injectPlural();
+  protected readonly locale = injectLocale();
+
   protected readonly filters = FILTERS;
-  protected readonly weekdays = WEEKDAY_INITIALS;
+  protected readonly weekdays = WEEKDAYS;
+  protected readonly pageSizes = PAGE_SIZES;
 
   protected readonly filter = signal<DoctorFilter>('all');
+  protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   protected readonly searchControl = new FormControl('', { nonNullable: true });
 
   private readonly search = toSignal(
@@ -69,11 +91,11 @@ export class Doctors {
 
   protected readonly errorMessage = computed(() => {
     const error = this.result.error();
-    return error instanceof Error ? error.message : error ? 'Could not load the team.' : null;
+    return error instanceof Error ? error.message : error ? this.t('doctors.error') : null;
   });
 
   /** The roster is small enough to filter in memory — no round trip per keystroke. */
-  protected readonly rows = computed(() => {
+  protected readonly matches = computed(() => {
     const term = this.search();
     const filter = this.filter();
 
@@ -94,6 +116,18 @@ export class Doctors {
     });
   });
 
+  protected readonly total = computed(() => this.matches().length);
+
+  /** Any change to the filter drops us back to the first page. */
+  protected readonly page = linkedSignal<string, number>({
+    source: () => `${this.filter()}:${this.search()}:${this.pageSize()}`,
+    computation: () => 1,
+  });
+
+  private readonly slice = computed(() => paginate(this.matches(), this.page(), this.pageSize()));
+
+  protected readonly rows = computed(() => this.slice().rows);
+
   protected readonly counts = computed(() => {
     const all = this.all();
     return {
@@ -103,6 +137,10 @@ export class Doctors {
     };
   });
 
+  protected readonly activeFilterCount = computed(
+    () => (this.filter() === 'all' ? 0 : 1) + (this.search() ? 1 : 0),
+  );
+
   protected setFilter(filter: DoctorFilter): void {
     this.filter.set(filter);
   }
@@ -111,12 +149,32 @@ export class Doctors {
     this.searchControl.setValue('');
   }
 
+  protected resetFilters(): void {
+    this.filter.set('all');
+    this.searchControl.setValue('');
+  }
+
   protected worksOn(doctor: DoctorRecord, day: number): boolean {
     return doctor.workingDays.includes(day as Weekday);
   }
 
-  protected weekdayName(day: number): string {
-    return WEEKDAY_NAMES[day];
+  protected weekdayInitial(day: number): string {
+    return this.t(`weekday.initial.${day}` as MessageKey);
+  }
+
+  protected weekdayTitle(doctor: DoctorRecord, day: number): string {
+    const name = this.t(`weekday.${day}` as MessageKey);
+    return this.worksOn(doctor, day)
+      ? this.t('doctors.working', { day: name })
+      : this.t('doctors.off', { day: name });
+  }
+
+  protected goToPage(page: number): void {
+    this.page.set(page);
+  }
+
+  protected setPageSize(size: number): void {
+    this.pageSize.set(size);
   }
 
   protected reload(): void {

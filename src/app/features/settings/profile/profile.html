@@ -1,13 +1,10 @@
-<div class="space-y-4">
+<div class="space-y-3">
   @if (loadError(); as message) {
     <app-alert tone="error">{{ message }}</app-alert>
   }
 
   @if (isDemoData()) {
-    <app-alert tone="info">
-      Showing a sample clinic — the API at <code class="font-mono">/api</code> is not reachable, so
-      changes are not persisted.
-    </app-alert>
+    <app-alert tone="info">{{ t('demo.profile') }}</app-alert>
   }
 
   @if (errorMessage(); as message) {
@@ -15,22 +12,24 @@
   }
 
   @if (saved()) {
-    <app-alert tone="success">Clinic profile saved.</app-alert>
+    <app-alert tone="success">{{ t('settings.profile.saved') }}</app-alert>
   }
 
-  <form class="app-card p-5 sm:p-6" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <form class="app-card p-4 sm:p-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     @if (resource.isLoading()) {
-      <div class="flex items-center gap-2 py-8 text-sm text-slate-500">
+      <div class="flex items-center gap-2 py-6 text-sm text-slate-500">
         <app-spinner />
-        Loading clinic details…
+        {{ t('settings.profile.loading') }}
       </div>
     } @else {
-      <fieldset class="space-y-5">
-        <legend class="text-brand-900 text-base font-semibold">Clinic profile</legend>
+      <fieldset class="space-y-4">
+        <legend class="text-brand-900 text-sm font-semibold">
+          {{ t('settings.profile.legend') }}
+        </legend>
 
-        <div class="grid gap-5 sm:grid-cols-2">
+        <div class="grid gap-4 sm:grid-cols-2">
           <div>
-            <label class="app-label" for="displayName">Clinic name</label>
+            <label class="app-label" for="displayName">{{ t('field.clinicName') }}</label>
             <input
               id="displayName"
               type="text"
@@ -41,11 +40,14 @@
               formControlName="displayName"
               autocomplete="organization"
             />
-            <app-field-error [control]="form.controls.displayName" label="Clinic name" />
+            <app-field-error
+              [control]="form.controls.displayName"
+              [label]="t('field.clinicName')"
+            />
           </div>
 
           <div>
-            <label class="app-label" for="phone">Contact phone</label>
+            <label class="app-label" for="phone">{{ t('field.contactPhone') }}</label>
             <input
               id="phone"
               type="tel"
@@ -53,13 +55,13 @@
               [class.app-input-invalid]="form.controls.phone.invalid && form.controls.phone.touched"
               formControlName="phone"
               autocomplete="tel"
-              placeholder="+55 11 3555-0100"
+              [placeholder]="t('settings.profile.phonePlaceholder')"
             />
-            <app-field-error [control]="form.controls.phone" label="Contact phone" />
+            <app-field-error [control]="form.controls.phone" [label]="t('field.contactPhone')" />
           </div>
 
           <div>
-            <label class="app-label" for="email">Contact email</label>
+            <label class="app-label" for="email">{{ t('field.contactEmail') }}</label>
             <input
               id="email"
               type="email"
@@ -68,27 +70,27 @@
               formControlName="email"
               autocomplete="email"
             />
-            <app-field-error [control]="form.controls.email" label="Contact email" />
+            <app-field-error [control]="form.controls.email" [label]="t('field.contactEmail')" />
           </div>
 
           <div>
-            <label class="app-label" for="timezone">Timezone</label>
+            <label class="app-label" for="timezone">{{ t('field.timezone') }}</label>
             <select id="timezone" class="app-input" formControlName="timezone">
               @for (zone of timezones; track zone.value) {
                 <option [value]="zone.value">{{ zone.label }}</option>
               }
             </select>
-            <app-field-error [control]="form.controls.timezone" label="Timezone" />
+            <app-field-error [control]="form.controls.timezone" [label]="t('field.timezone')" />
           </div>
         </div>
 
         <div>
-          <label class="app-label" for="username">Public page address</label>
+          <label class="app-label" for="username">{{ t('field.publicAddress') }}</label>
           <div class="flex items-stretch">
             <span
-              class="inline-flex items-center rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 px-3 text-sm text-slate-500"
+              class="inline-flex items-center rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 px-2.5 text-xs text-slate-500"
             >
-              sistemizedental.com/
+              {{ t('settings.profile.usernamePrefix') }}
             </span>
             <input
               id="username"
@@ -101,27 +103,25 @@
               autocomplete="off"
             />
           </div>
-          <app-field-error [control]="form.controls.username" label="Public page address" />
+          <app-field-error [control]="form.controls.username" [label]="t('field.publicAddress')" />
         </div>
 
         <div>
-          <label class="app-label" for="shortAbout">Headline</label>
+          <label class="app-label" for="shortAbout">{{ t('field.headline') }}</label>
           <input
             id="shortAbout"
             type="text"
             class="app-input"
             formControlName="shortAbout"
             [attr.maxlength]="aboutMaxLength"
-            placeholder="Odontologia geral, ortodontia e implantes."
+            [placeholder]="t('settings.profile.headlinePlaceholder')"
           />
-          <p class="mt-1.5 text-xs text-slate-400">
-            Shown under the clinic name in search results.
-          </p>
-          <app-field-error [control]="form.controls.shortAbout" label="Headline" />
+          <p class="mt-1 text-[11px] text-slate-400">{{ t('settings.profile.headlineHelp') }}</p>
+          <app-field-error [control]="form.controls.shortAbout" [label]="t('field.headline')" />
         </div>
 
         <div>
-          <label class="app-label" for="about">About the clinic</label>
+          <label class="app-label" for="about">{{ t('field.about') }}</label>
           <textarea
             id="about"
             class="app-input"
@@ -129,37 +129,35 @@
             formControlName="about"
             [attr.maxlength]="aboutMaxLength"
           ></textarea>
-          <app-field-error [control]="form.controls.about" label="About the clinic" />
+          <app-field-error [control]="form.controls.about" [label]="t('field.about')" />
         </div>
 
-        <label class="flex items-start gap-3">
+        <label class="flex items-start gap-2.5">
           <input
             type="checkbox"
             class="text-brand-600 focus:ring-brand-400 mt-0.5 h-4 w-4 rounded border-slate-300"
             formControlName="searchable"
           />
           <span class="text-sm">
-            <span class="block font-medium text-slate-700">List the clinic on the portal</span>
-            <span class="block text-xs text-slate-500">
-              Patients searching for a dentist nearby can find and book with you.
+            <span class="block text-xs font-medium text-slate-700">
+              {{ t('settings.profile.searchable') }}
+            </span>
+            <span class="block text-[11px] text-slate-500">
+              {{ t('settings.profile.searchableHelp') }}
             </span>
           </span>
         </label>
       </fieldset>
 
-      <div class="mt-6 flex items-center gap-3 border-t border-slate-200/70 pt-5">
-        <button
-          type="submit"
-          class="bg-brand-600 hover:bg-brand-700 flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition disabled:opacity-60"
-          [disabled]="saving()"
-        >
+      <div class="mt-5 flex items-center gap-2.5 border-t border-slate-200/70 pt-4">
+        <button type="submit" class="app-btn app-btn-primary" [disabled]="saving()">
           @if (saving()) {
             <app-spinner />
           }
-          Save changes
+          {{ t('settings.profile.save') }}
         </button>
         @if (form.dirty && !saving()) {
-          <span class="text-xs text-slate-400">Unsaved changes</span>
+          <span class="text-[11px] text-slate-400">{{ t('common.unsavedChanges') }}</span>
         }
       </div>
     }
