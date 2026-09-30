@@ -6,4 +6,10 @@ export const patientsRoutes: Routes = [
     title: 'Patients · Sistemize Dental',
     loadComponent: () => import('./patients/patients').then((m) => m.Patients),
   },
+  {
+    path: ':id',
+    title: 'Patient · Sistemize Dental',
+    loadComponent: () =>
+      import('./patient-detail/patient-detail').then((m) => m.PatientDetail),
+  },
 ];

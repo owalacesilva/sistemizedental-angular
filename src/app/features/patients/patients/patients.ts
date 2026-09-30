@@ -11,6 +11,7 @@ import {
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, map, startWith } from 'rxjs';
 
 import { injectLocale, injectPlural, injectT } from '../../../core/i18n/translate';
@@ -45,6 +46,7 @@ const SEARCH_FIELDS: readonly {
   imports: [
     DatePipe,
     ReactiveFormsModule,
+    RouterLink,
     PageHeader,
     Alert,
     Avatar,

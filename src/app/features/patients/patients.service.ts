@@ -5,7 +5,7 @@ import { type Observable, map } from 'rxjs';
 import { apiUrl } from '../../core/api/api-url';
 import { type Paginated, pageQuery } from '../../core/api/api.models';
 import { withDemoFallback } from '../../core/api/demo-fallback';
-import { demoPatientsPage } from './demo-patients.data';
+import { demoPatientById, demoPatientsPage } from './demo-patients.data';
 import type { PatientRecord, PatientsPage, PatientsQuery } from './patients.models';
 
 /** Raw row shape as returned by `GET api/patients.json`. */
@@ -22,6 +22,13 @@ interface PatientRow {
   birth_date?: string | null;
   last_visit_at?: string | null;
   blocked?: boolean;
+  anamnesis?: {
+    allergies?: string[] | null;
+    medications?: string[] | null;
+    conditions?: string[] | null;
+    notes?: string | null;
+    updated_at?: string | null;
+  } | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -46,6 +53,14 @@ export class PatientsService {
         map((response) => this.toPage(response)),
         withDemoFallback(() => demoPatientsPage(query)),
       );
+  }
+
+  /** One patient; `null` when the API (or demo roster) has no such record. */
+  get(id: number): Observable<PatientRecord | null> {
+    return this.http.get<PatientRow | null>(apiUrl(`api/patients/${id}.json`)).pipe(
+      map((row) => (row ? this.toPatient(row) : null)),
+      withDemoFallback(() => demoPatientById(id)),
+    );
   }
 
   private toPage(response: Paginated<PatientRow>): PatientsPage {
@@ -73,6 +88,15 @@ export class PatientsService {
       birthDate: row.birth_date ?? null,
       lastVisit: row.last_visit_at ?? null,
       active: !row.blocked,
+      anamnesis: row.anamnesis
+        ? {
+            allergies: row.anamnesis.allergies ?? [],
+            medications: row.anamnesis.medications ?? [],
+            conditions: row.anamnesis.conditions ?? [],
+            notes: row.anamnesis.notes?.trim() || null,
+            updatedAt: row.anamnesis.updated_at ?? null,
+          }
+        : null,
     };
   }
 }

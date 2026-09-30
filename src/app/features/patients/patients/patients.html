@@ -142,7 +142,13 @@
                   <div class="flex items-center gap-2.5">
                     <app-avatar [name]="patient.name" sizeClass="h-8 w-8 text-[11px]" />
                     <div class="min-w-0">
-                      <p class="truncate font-medium text-slate-800">{{ patient.name }}</p>
+                      <a
+                        class="hover:text-brand-700 block truncate font-medium text-slate-800 hover:underline"
+                        [routerLink]="['/patients', patient.id]"
+                        [attr.aria-label]="t('patients.detail.view', { name: patient.name })"
+                      >
+                        {{ patient.name }}
+                      </a>
                       <p class="truncate text-[11px] text-slate-500">
                         {{ patient.phone ?? patient.email ?? t('patients.noContact') }}
                       </p>

@@ -1,4 +1,9 @@
-import type { PatientRecord, PatientsPage, PatientsQuery } from './patients.models';
+import type {
+  PatientAnamnesis,
+  PatientRecord,
+  PatientsPage,
+  PatientsQuery,
+} from './patients.models';
 
 function daysAgo(days: number): string {
   const date = new Date();
@@ -308,6 +313,37 @@ function haystack(patient: PatientRecord, field: PatientsQuery['field']): string
     default:
       return patient.name;
   }
+}
+
+/** Medical history for a few roster patients; the rest have none on file. */
+const ANAMNESES: Readonly<Record<number, PatientAnamnesis>> = {
+  101: {
+    allergies: ['Penicillin', 'Latex'],
+    medications: ['Levothyroxine 50 mcg'],
+    conditions: ['Hypothyroidism'],
+    notes: 'Prefers morning appointments. Mild anxiety before procedures.',
+    updatedAt: daysAgo(30),
+  },
+  102: {
+    allergies: [],
+    medications: ['Losartan 50 mg'],
+    conditions: ['Hypertension'],
+    notes: null,
+    updatedAt: daysAgo(90),
+  },
+  107: {
+    allergies: ['Dipyrone'],
+    medications: ['Metformin 850 mg', 'Atorvastatin 20 mg'],
+    conditions: ['Type 2 diabetes', 'High cholesterol'],
+    notes: 'Check blood sugar before long procedures.',
+    updatedAt: daysAgo(14),
+  },
+};
+
+/** A single roster entry, or null when the id is unknown. */
+export function demoPatientById(id: number): PatientRecord | null {
+  const patient = PATIENTS.find((candidate) => candidate.id === id);
+  return patient ? { ...patient, anamnesis: ANAMNESES[id] ?? null } : null;
 }
 
 /** Filters and pages the fixed roster the same way the API would. */

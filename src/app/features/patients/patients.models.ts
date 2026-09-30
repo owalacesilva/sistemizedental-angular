@@ -1,6 +1,16 @@
 /** Field the legacy API matches `search` against (its `type` parameter). */
 export type PatientSearchField = 'first_name' | 'phone_number' | 'email';
 
+/** Medical history (anamnese) taken at the patient's first visit and kept up to date. */
+export interface PatientAnamnesis {
+  readonly allergies: readonly string[];
+  readonly medications: readonly string[];
+  readonly conditions: readonly string[];
+  readonly notes: string | null;
+  /** ISO-8601 date of the last review, or null when unknown. */
+  readonly updatedAt: string | null;
+}
+
 export interface PatientRecord {
   readonly id: number;
   readonly name: string;
@@ -13,6 +23,8 @@ export interface PatientRecord {
   readonly birthDate: string | null;
   readonly lastVisit: string | null;
   readonly active: boolean;
+  /** Only loaded by the detail endpoint; `null` when none is on file. */
+  readonly anamnesis?: PatientAnamnesis | null;
 }
 
 export interface PatientsPage {
